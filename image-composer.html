@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>图片合成工具</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+@font-face {
+  font-family: 'Alibaba PuHuiTi';
+  src: url('https://cdn.jsdelivr.net/npm/alibaba-puhuiti-fonts@latest/Alibaba-PuHuiTi-Regular.woff2') format('woff2');
+  font-display: swap;
+}
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+.header { background: linear-gradient(135deg, #1e293b, #0f172a); border-bottom: 1px solid #334155; padding: 20px 32px; text-align: center; }
+.header h1 { font-size: 24px; font-weight: 700; color: #38bdf8; }
+.header p { color: #94a3b8; font-size: 14px; margin-top: 4px; }
+.container { max-width: 1200px; margin: 0 auto; padding: 24px 16px; }
+
+/* Upload area */
+.upload-section { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 36px; }
+.upload-card { flex: 1; min-width: 280px; background: #1e293b; border: 2px dashed #475569; border-radius: 12px; padding: 32px 20px; text-align: center; cursor: pointer; transition: all 0.2s; }
+.upload-card:hover { border-color: #38bdf8; background: #1e293bdd; }
+.upload-card.active { border-color: #38bdf8; border-style: solid; background: #0f2744; }
+.upload-card .icon { font-size: 40px; margin-bottom: 12px; }
+.upload-card h3 { font-size: 16px; margin-bottom: 6px; }
+.upload-card .hint { font-size: 12px; color: #64748b; }
+.upload-card .count { margin-top: 10px; font-size: 13px; color: #38bdf8; font-weight: 600; }
+input[type="file"] { display: none; }
+
+/* Controls */
+.controls { display: flex; gap: 16px; margin: 24px 0 24px; flex-wrap: wrap; align-items: center; justify-content: center; }
+.btn { padding: 14px 36px; border-radius: 10px; border: none; cursor: pointer; font-size: 16px; font-weight: 700; transition: all 0.2s; letter-spacing: 1px; }
+.btn-primary { background: #38bdf8; color: #0f172a; box-shadow: 0 4px 12px rgba(56,189,248,0.3); }
+.btn-primary:hover { background: #7dd3fc; box-shadow: 0 6px 20px rgba(56,189,248,0.5); transform: translateY(-1px); }
+.btn-primary:disabled { background: #475569; color: #94a3b8; cursor: not-allowed; box-shadow: none; transform: none; }
+.btn-secondary { background: #334155; color: #e2e8f0; }
+.btn-secondary:hover { background: #475569; }
+.btn-success { background: #22c55e; color: #fff; box-shadow: 0 4px 12px rgba(34,197,94,0.3); }
+.btn-success:hover { background: #4ade80; box-shadow: 0 6px 20px rgba(34,197,94,0.5); transform: translateY(-1px); }
+
+/* Position input */
+.pos-input { display: flex; align-items: center; gap: 4px; background: #1e293b; padding: 2px 16px; border-radius: 8px; font-size: 14px; }
+.pos-input label { color: #94a3b8; }
+.pos-input input { width: 60px; padding: 4px 8px; border-radius: 4px; border: 1px solid #475569; background: #0f172a; color: #e2e8f0; text-align: center; }
+
+/* Progress */
+.progress-wrap { margin-bottom: 16px; display: none; }
+.progress-wrap.show { display: block; }
+.progress-bar { height: 6px; background: #334155; border-radius: 3px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, #38bdf8, #22c55e); border-radius: 3px; transition: width 0.3s; width: 0; }
+.progress-text { font-size: 12px; color: #94a3b8; margin-top: 6px; }
+
+/* Result */
+.result-section { display: none; }
+.result-section.show { display: block; }
+.result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.result-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+.result-card { background: #1e293b; border-radius: 10px; overflow: hidden; border: 1px solid #334155; }
+.result-card img { width: 100%; display: block; }
+.result-card .label { padding: 8px 12px; font-size: 12px; color: #94a3b8; display: flex; justify-content: space-between; align-items: center; }
+.result-card .label .name { font-weight: 600; color: #e2e8f0; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.btn-download-single { padding: 4px 10px; font-size: 11px; border-radius: 4px; border: 1px solid #475569; background: transparent; color: #38bdf8; cursor: pointer; }
+.btn-download-single:hover { background: #334155; }
+
+/* Slot tabs */
+.slot-tabs { display: flex; gap: 4px; margin: 24px 0 16px; background: #1e293b; border-radius: 10px; padding: 4px; }
+.slot-tab { flex: 1; padding: 8px 12px; text-align: center; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; color: #94a3b8; transition: all 0.2s; border: none; background: none; }
+.slot-tab:hover { color: #e2e8f0; }
+.slot-tab.active { background: #38bdf8; color: #0f172a; }
+.slot-config { display: none; }
+.slot-config.active { display: flex; flex-wrap: wrap; gap: 3px; align-items: center; }
+.slot-label-fields { display: flex; flex-wrap: wrap; gap: 3px; align-items: center; }
+.slot-text-fields { display: inline; }
+
+/* Toast */
+.toast { position: fixed; top: 20px; right: 20px; padding: 12px 20px; border-radius: 8px; color: #fff; font-size: 14px; z-index: 9999; animation: slideIn 0.3s ease; }
+.toast.error { background: #ef4444; }
+.toast.success { background: #22c55e; }
+.toast.info { background: #38bdf8; }
+@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🖼️ 图片批量合成工具</h1>
+  <p>底图 (1920×1080) + Excel URL 图片 → 合成图 → 批量下载</p>
+</div>
+
+<div class="container">
+  <!-- Upload -->
+  <div class="upload-section">
+    <div class="upload-card" id="baseCard" onclick="document.getElementById('baseInput').click()">
+      <div class="icon">📁</div>
+      <h3>选择底图文件夹</h3>
+      <p class="hint">支持 .png / .jpg / .webp，尺寸 1920×1080</p>
+      <p class="count" id="baseCount"></p>
+    </div>
+    <div class="upload-card" id="excelCard" onclick="document.getElementById('excelInput').click()">
+      <div class="icon">📊</div>
+      <h3>上传 Excel 表格</h3>
+      <p class="hint">表格需包含图片 URL 链接列</p>
+      <p class="count" id="excelCount"></p>
+    </div>
+  </div>
+  <input type="file" id="baseInput" webkitdirectory multiple accept="image/*">
+  <input type="file" id="excelInput" accept=".xlsx,.xls,.csv">
+
+  <!-- Resource slot selector -->
+  <div class="slot-tabs" id="slotTabs">
+    <button class="slot-tab active" data-slot="0">🎬 影视角标</button>
+    <button class="slot-tab" data-slot="1">📺 MI-01-剧集详情页</button>
+    <button class="slot-tab" data-slot="2">📱 MI-影剧综01-OTT信息流</button>
+    <button class="slot-tab" data-slot="3">🏠 HI-首页推荐</button>
+  </div>
+
+  <!-- Slot config: 影视角标 -->
+  <div class="slot-config active" id="slotConfig0">
+    <div class="pos-input">
+      <label>原点：</label>
+      <select class="slot-origin"><option value="bl" selected>左下角</option><option value="tl">左上角</option></select>
+    </div>
+    <div class="pos-input">
+      <label>商品图位置：</label>X<input type="number" class="slot-posX" value="63" min="0">
+      Y<input type="number" class="slot-posY" value="47" min="0">
+      圆角 左上<input type="number" class="slot-radiusTL" value="0" min="0" max="200" style="width:50px">
+      右上<input type="number" class="slot-radiusTR" value="0" min="0" max="200" style="width:50px">
+      右下<input type="number" class="slot-radiusBR" value="0" min="0" max="200" style="width:50px">
+      左下<input type="number" class="slot-radiusBL" value="0" min="0" max="200" style="width:50px">px
+    </div>
+    <div class="slot-text-fields">
+      <div class="pos-input">
+        <label>文字：</label>X<input type="number" class="slot-textX" value="63" min="0">
+        Y<input type="number" class="slot-textY" value="378" min="0">
+      </div>
+    </div>
+    <div class="slot-label-fields" style="display:none">
+      <div class="pos-input">
+        <label>标签原点：</label>
+        <select class="slot-labelOrigin"><option value="bl" selected>左下角</option><option value="tl">左上角</option></select>
+      </div>
+      <div class="pos-input">
+        <label>标签位置：</label>X<input type="number" class="slot-labelX" value="544" min="0">
+        Y<input type="number" class="slot-labelY" value="867" min="0">
+      </div>
+    </div>
+  </div>
+
+  <!-- Slot config: MI-01-剧集详情页 -->
+  <div class="slot-config" id="slotConfig1">
+    <div class="pos-input">
+      <label>原点：</label>
+      <select class="slot-origin"><option value="bl">左下角</option><option value="tl" selected>左上角</option></select>
+    </div>
+    <div class="pos-input">
+      <label>商品图位置：</label>X<input type="number" class="slot-posX" value="120" min="0">
+      Y<input type="number" class="slot-posY" value="954" min="0">
+      圆角 左上<input type="number" class="slot-radiusTL" value="12" min="0" max="200" style="width:50px">
+      右上<input type="number" class="slot-radiusTR" value="12" min="0" max="200" style="width:50px">
+      右下<input type="number" class="slot-radiusBR" value="0" min="0" max="200" style="width:50px">
+      左下<input type="number" class="slot-radiusBL" value="0" min="0" max="200" style="width:50px">px
+    </div>
+    <div class="slot-text-fields" style="display:none">
+      <div class="pos-input">
+        <label>文字：</label>X<input type="number" class="slot-textX" value="63" min="0">
+        Y<input type="number" class="slot-textY" value="378" min="0">
+      </div>
+    </div>
+    <div class="slot-label-fields">
+      <div class="pos-input">
+        <label>标签原点：</label>
+        <select class="slot-labelOrigin"><option value="bl">左下角</option><option value="tl" selected>左上角</option></select>
+      </div>
+      <div class="pos-input">
+        <label>标签位置：</label>X<input type="number" class="slot-labelX" value="1750" min="0">
+        Y<input type="number" class="slot-labelY" value="960" min="0">
+      </div>
+    </div>
+  </div>
+
+  <!-- Slot config: MI-影剧综01-OTT信息流 -->
+  <div class="slot-config" id="slotConfig2">
+    <div class="pos-input">
+      <label>原点：</label>
+      <select class="slot-origin"><option value="bl">左下角</option><option value="tl" selected>左上角</option></select>
+    </div>
+    <div class="pos-input">
+      <label>商品图位置：</label>X<input type="number" class="slot-posX" value="1416" min="0">
+      Y<input type="number" class="slot-posY" value="623" min="0">
+      圆角 左上<input type="number" class="slot-radiusTL" value="12" min="0" max="200" style="width:50px">
+      右上<input type="number" class="slot-radiusTR" value="12" min="0" max="200" style="width:50px">
+      右下<input type="number" class="slot-radiusBR" value="12" min="0" max="200" style="width:50px">
+      左下<input type="number" class="slot-radiusBL" value="12" min="0" max="200" style="width:50px">px
+    </div>
+    <div class="slot-text-fields" style="display:none">
+      <div class="pos-input">
+        <label>文字：</label>X<input type="number" class="slot-textX" value="63" min="0">
+        Y<input type="number" class="slot-textY" value="378" min="0">
+      </div>
+    </div>
+    <div class="slot-label-fields">
+      <div class="pos-input">
+        <label>标签原点：</label>
+        <select class="slot-labelOrigin"><option value="bl">左下角</option><option value="tl" selected>左上角</option></select>
+      </div>
+      <div class="pos-input">
+        <label>标签位置：</label>X<input type="number" class="slot-labelX" value="1752" min="0">
+        Y<input type="number" class="slot-labelY" value="627" min="0">
+      </div>
+    </div>
+  </div>
+
+  <!-- Slot config: HI-首页推荐 -->
+  <div class="slot-config" id="slotConfig3">
+    <div class="pos-input">
+      <label>原点：</label>
+      <select class="slot-origin"><option value="bl">左下角</option><option value="tl" selected>左上角</option></select>
+    </div>
+    <div class="pos-input">
+      <label>商品图位置：</label>X<input type="number" class="slot-posX" value="539" min="0">
+      Y<input type="number" class="slot-posY" value="860" min="0">
+      圆角 左上<input type="number" class="slot-radiusTL" value="12" min="0" max="200" style="width:50px">
+      右上<input type="number" class="slot-radiusTR" value="12" min="0" max="200" style="width:50px">
+      右下<input type="number" class="slot-radiusBR" value="6" min="0" max="200" style="width:50px">
+      左下<input type="number" class="slot-radiusBL" value="6" min="0" max="200" style="width:50px">px
+    </div>
+    <div class="slot-text-fields" style="display:none">
+      <div class="pos-input">
+        <label>文字：</label>X<input type="number" class="slot-textX" value="63" min="0">
+        Y<input type="number" class="slot-textY" value="378" min="0">
+      </div>
+    </div>
+    <div class="slot-label-fields">
+      <div class="pos-input">
+        <label>标签原点：</label>
+        <select class="slot-labelOrigin"><option value="bl">左下角</option><option value="tl" selected>左上角</option></select>
+      </div>
+      <div class="pos-input">
+        <label>标签位置：</label>X<input type="number" class="slot-labelX" value="544" min="0">
+        Y<input type="number" class="slot-labelY" value="867" min="0">
+      </div>
+    </div>
+  </div>
+
+  <!-- Ad label upload -->
+  <div class="upload-section" id="labelUploadSection" style="margin-bottom:36px;margin-top:24px;">
+    <div class="upload-card" id="labelCard" onclick="document.getElementById('labelInput').click()" style="min-width:200px;padding:8px 16px;">
+      <div class="icon">🏷️</div>
+      <h3>上传「广告」标签</h3>
+      <p class="hint">PNG 格式</p>
+      <p class="count" id="labelStatus"></p>
+    </div>
+  </div>
+  <input type="file" id="labelInput" accept=".png">
+
+  <!-- Controls -->
+  <div class="controls">
+    <button class="btn btn-primary" id="composeBtn" disabled onclick="startCompose()">🎨 开始合成</button>
+    <button class="btn btn-success" id="downloadAllBtn" disabled onclick="downloadAll()">📦 批量打包下载</button>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text" id="progressText"></div>
+  </div>
+
+  <!-- Results -->
+  <div class="result-section" id="resultSection">
+    <div class="result-header">
+      <h3>合成结果（<span id="resultCount">0</span> 张）</h3>
+    </div>
+    <div class="result-grid" id="resultGrid"></div>
+  </div>
+</div>
+
+<script>
+// State
+let baseImages = [];       // { name, img: Image }
+let excelUrls = [];        // [{ url, row }]
+let compositeResults = []; // [{ blob, baseName, urlName }]
+let labelImgs = {};        // { slotIndex: Image }
+let activeSlot = 0;        // 当前资源位索引
+
+// DOM
+const baseCard = document.getElementById('baseCard');
+const excelCard = document.getElementById('excelCard');
+const baseCount = document.getElementById('baseCount');
+const excelCount = document.getElementById('excelCount');
+const labelStatus = document.getElementById('labelStatus');
+const composeBtn = document.getElementById('composeBtn');
+const downloadAllBtn = document.getElementById('downloadAllBtn');
+const progressWrap = document.getElementById('progressWrap');
+const progressFill = document.getElementById('progressFill');
+const progressText = document.getElementById('progressText');
+const resultSection = document.getElementById('resultSection');
+const resultGrid = document.getElementById('resultGrid');
+const resultCount = document.getElementById('resultCount');
+
+// Upload base images
+document.getElementById('baseInput').addEventListener('change', async function(e) {
+  const files = Array.from(e.target.files).filter(f => /\.(png|jpe?g|webp)$/i.test(f.name));
+  if (!files.length) { toast('未检测到图片文件', 'error'); return; }
+
+  baseCard.classList.add('active');
+  baseCount.textContent = `正在加载 ${files.length} 张底图...`;
+
+  baseImages = [];
+  for (const file of files) {
+    const img = await loadImageFromFile(file);
+    baseImages.push({ name: file.name, img, file });
+  }
+
+  baseCount.textContent = `✅ ${baseImages.length} 张底图已加载`;
+  updateBtn();
+});
+
+// Upload Excel
+document.getElementById('excelInput').addEventListener('change', async function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  excelCard.classList.add('active');
+  excelCount.textContent = '正在解析...';
+
+  try {
+    const data = await file.arrayBuffer();
+    const wb = XLSX.read(data);
+    const sheet = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+    excelUrls = [];
+    for (let i = 0; i < rows.length; i++) {
+      for (let j = 0; j < rows[i].length; j++) {
+        const cell = String(rows[i][j] || '').trim();
+        if (/^https?:\/\/.+\.(png|jpe?g|webp|gif|bmp|svg)/i.test(cell) || /^https?:\/\/.*(img|image|photo|pic)/i.test(cell)) {
+          // 店铺名称取A列（第1列）
+          const shopName = String((rows[i] || [])[0] || '').trim();
+          excelUrls.push({ url: cell, row: i + 1, col: j + 1, shopName });
+        }
+      }
+    }
+
+    // Also try to auto-detect URL column
+    if (excelUrls.length === 0) {
+      excelUrls = detectUrlColumn(rows);
+    }
+
+    excelCount.textContent = excelUrls.length
+      ? `✅ ${excelUrls.length} 个图片 URL${excelUrls.some(u => u.shopName) ? '（已识别店铺名）' : ''}`
+      : '⚠️ 未检测到图片 URL';
+    updateBtn();
+  } catch (err) {
+    toast('Excel 解析失败：' + err.message, 'error');
+    excelCount.textContent = '❌ 解析失败';
+  }
+});
+
+function detectUrlColumn(rows) {
+  // Find columns that look like URLs
+  if (rows.length < 2) return [];
+  const header = rows[0] || [];
+  let urlCol = -1;
+  for (let i = 0; i < header.length; i++) {
+    const h = String(header[i] || '').toLowerCase();
+    if (/(url|链接|link|图片|image|img|地址)/.test(h)) { urlCol = i; break; }
+  }
+  if (urlCol === -1) {
+    // Check first few data rows for URL pattern
+    for (let r = 1; r < Math.min(rows.length, 5); r++) {
+      for (let c = 0; c < (rows[r] || []).length; c++) {
+        if (/^https?:\/\//.test(String(rows[r][c] || '').trim())) { urlCol = c; break; }
+      }
+      if (urlCol !== -1) break;
+    }
+  }
+
+  if (urlCol === -1) return [];
+
+  const urls = [];
+  for (let i = 1; i < rows.length; i++) {
+    const val = String((rows[i] || [])[urlCol] || '').trim();
+    if (/^https?:\/\//.test(val)) {
+      // 店铺名称固定取A列（第1列）
+      const shopName = String((rows[i] || [])[0] || '').trim();
+      urls.push({ url: val, row: i + 1, col: urlCol + 1, shopName });
+    }
+  }
+  return urls;
+}
+
+// Slot tab switching
+document.getElementById('slotTabs').addEventListener('click', function(e) {
+  const tab = e.target.closest('.slot-tab');
+  if (!tab) return;
+  activeSlot = parseInt(tab.dataset.slot);
+  document.querySelectorAll('.slot-tab').forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+  document.querySelectorAll('.slot-config').forEach(c => c.classList.remove('active'));
+  const config = document.getElementById('slotConfig' + activeSlot);
+  config.classList.add('active');
+  // 影视角标（slot 0）隐藏标签配置和标签上传按钮
+  config.querySelectorAll('.slot-label-fields').forEach(el => {
+    el.style.display = activeSlot === 0 ? 'none' : '';
+  });
+  config.querySelectorAll('.slot-text-fields').forEach(el => {
+    el.style.display = activeSlot === 0 ? '' : 'none';
+  });
+  document.getElementById('labelUploadSection').style.display = activeSlot === 0 ? 'none' : '';
+  // 非影视角标资源位按钮上移20px
+  document.querySelector('.controls').style.marginTop = activeSlot === 0 ? '24px' : '-14px';
+  // 切换资源位时更新标签状态显示
+  updateLabelStatus();
+});
+
+// 初始加载时执行一次，默认影视角标隐藏标签和文字
+document.getElementById('labelUploadSection').style.display = 'none';
+document.querySelectorAll('.slot-label-fields').forEach(el => el.style.display = 'none');
+document.querySelectorAll('.slot-text-fields').forEach(el => el.style.display = 'none');
+// 恢复 slot 0（影视角标）的文字显示
+document.querySelectorAll('#slotConfig0 .slot-text-fields').forEach(el => el.style.display = '');
+// 初始按钮位置（影视角标）
+document.querySelector('.controls').style.marginTop = '24px';
+
+// 更新标签状态显示
+function updateLabelStatus() {
+  const img = labelImgs[activeSlot];
+  if (img) {
+    labelStatus.textContent = '✅ 已加载（' + img.naturalWidth + '×' + img.naturalHeight + '）';
+    document.getElementById('labelCard').classList.add('active');
+  } else {
+    labelStatus.textContent = '';
+    document.getElementById('labelCard').classList.remove('active');
+  }
+}
+
+// 从 localStorage 恢复已保存的标签图片
+(async function restoreLabels() {
+  for (let i = 0; i <= 3; i++) {
+    const dataUrl = localStorage.getItem('label_slot_' + i);
+    if (dataUrl) {
+      try {
+        const img = await loadImageFromUrl(dataUrl);
+        labelImgs[i] = img;
+      } catch (e) {
+        console.warn('恢复标签图片失败 slot ' + i);
+      }
+    }
+  }
+  updateLabelStatus();
+})();
+
+// Upload label image - 上传后自动保存到 localStorage，刷新后不丢失
+document.getElementById('labelInput').addEventListener('change', async function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  labelStatus.textContent = '正在加载...';
+  try {
+    // 读取为 data URL 并存入 localStorage
+    const reader = new FileReader();
+    reader.onload = async function(ev) {
+      const dataUrl = ev.target.result;
+      localStorage.setItem('label_slot_' + activeSlot, dataUrl);
+      // 加载为 Image 对象
+      const img = await loadImageFromUrl(dataUrl);
+      labelImgs[activeSlot] = img;
+      labelStatus.textContent = '✅ 已加载（' + img.naturalWidth + '×' + img.naturalHeight + '）';
+      document.getElementById('labelCard').classList.add('active');
+    };
+    reader.readAsDataURL(file);
+  } catch (err) {
+    labelStatus.textContent = '❌ 加载失败';
+    toast('标签图片加载失败', 'error');
+  }
+});
+
+// --- Image loading ---
+function loadImageFromFile(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error(`无法加载图片：${file.name}`));
+      img.src = e.target.result;
+    };
+    reader.onerror = () => reject(new Error(`读取文件失败：${file.name}`));
+    reader.readAsDataURL(file);
+  });
+}
+
+// 从 data URL 加载图片
+function loadImageFromUrl(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('无法加载图片'));
+    img.src = url;
+  });
+}
+
+function loadImageFromUrl(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    const timer = setTimeout(() => reject(new Error('加载超时')), 15000);
+
+    img.onload = () => {
+      clearTimeout(timer);
+      resolve(img);
+    };
+
+    img.onerror = () => {
+      clearTimeout(timer);
+      // Try without CORS as fallback (some servers don't support CORS)
+      const fallback = new Image();
+      fallback.onload = () => {
+        clearTimeout(timer);
+        resolve(fallback);
+      };
+      fallback.onerror = () => {
+        clearTimeout(timer);
+        reject(new Error('无法加载'));
+      };
+      fallback.src = url;
+    };
+
+    img.src = url;
+  });
+}
+
+// --- Composition ---
+// Preload font for canvas text
+let fontLoaded = false;
+async function preloadFont() {
+  if (fontLoaded) return;
+  try {
+    const font = new FontFace('Alibaba PuHuiTi', 'url(https://cdn.jsdelivr.net/npm/alibaba-puhuiti-fonts@latest/Alibaba-PuHuiTi-Regular.woff2)');
+    const loaded = await font.load();
+    document.fonts.add(loaded);
+    fontLoaded = true;
+  } catch (e) {
+    console.warn('阿里巴巴普惠体加载失败，使用系统字体', e.message);
+  }
+}
+
+async function startCompose() {
+  if (!baseImages.length || !excelUrls.length) return;
+
+  await preloadFont();
+
+  // 读取当前资源位的配置
+  const cfg = document.getElementById('slotConfig' + activeSlot);
+  const origin      = cfg.querySelector('.slot-origin').value;
+  const labelOrigin  = cfg.querySelector('.slot-labelOrigin').value;
+  const posX   = parseInt(cfg.querySelector('.slot-posX').value) || 0;
+  const posY   = parseInt(cfg.querySelector('.slot-posY').value) || 0;
+  const radiusTL = parseInt(cfg.querySelector('.slot-radiusTL').value) || 0;
+  const radiusTR = parseInt(cfg.querySelector('.slot-radiusTR').value) || 0;
+  const radiusBR = parseInt(cfg.querySelector('.slot-radiusBR').value) || 0;
+  const radiusBL = parseInt(cfg.querySelector('.slot-radiusBL').value) || 0;
+  const radii = [radiusTL, radiusTR, radiusBR, radiusBL];
+  const textX  = parseInt(cfg.querySelector('.slot-textX').value) || 0;
+  const textY  = parseInt(cfg.querySelector('.slot-textY').value) || 0;
+  const labelX = parseInt(cfg.querySelector('.slot-labelX').value) || 0;
+  const labelY = parseInt(cfg.querySelector('.slot-labelY').value) || 0;
+  // 一一对应：第N张底图 + 第N个URL → 第N张合成图
+  const total = Math.min(baseImages.length, excelUrls.length);
+  if (baseImages.length !== excelUrls.length) {
+    toast(`底图 ${baseImages.length} 张，URL ${excelUrls.length} 个，按少的数量合成 ${total} 张`, 'info');
+  }
+
+  composeBtn.disabled = true;
+  downloadAllBtn.disabled = true;
+  progressWrap.classList.add('show');
+  resultGrid.innerHTML = '';
+  resultSection.classList.add('show');
+  compositeResults = [];
+
+  for (let i = 0; i < total; i++) {
+    const base = baseImages[i];
+    const urlItem = excelUrls[i];
+    try {
+      const overlayImg = await loadImageFromUrl(urlItem.url);
+      const textStr = activeSlot === 0 ? '猜你喜欢' : '';
+      const composite = compositeImage(base.img, overlayImg, posX, posY, origin, textX, textY, textStr, radii, labelImgs[activeSlot], labelX, labelY, labelOrigin);
+      const blob = dataURLtoBlob(composite);
+      // 用店铺名命名，没有则用底图+URL序号
+      const shopName = urlItem.shopName || '';
+      const safeShopName = shopName.replace(/[\\/:*?"<>|]/g, '_').trim();
+      const outName = safeShopName
+        ? `${safeShopName}.png`
+        : `${base.name.replace(/\.[^.]+$/, '')}_${i + 1}.png`;
+
+      compositeResults.push({ blob, baseName: base.name, urlName: urlItem.url, outName });
+
+      // Show preview
+      const card = document.createElement('div');
+      card.className = 'result-card';
+      card.innerHTML = `
+        <img src="${composite}" alt="${outName}">
+        <div class="label">
+          <span class="name" title="${outName}">${outName}</span>
+          <button class="btn-download-single" onclick="downloadSingle('${composite}', '${outName}')">⬇ 下载</button>
+        </div>
+      `;
+      resultGrid.appendChild(card);
+    } catch (err) {
+      compositeResults.push({
+        error: true,
+        baseName: base.name,
+        urlName: urlItem.url,
+        message: err.message
+      });
+
+      const card = document.createElement('div');
+      card.className = 'result-card';
+      card.innerHTML = `
+        <div style="padding:40px;text-align:center;color:#ef4444;">
+          <div style="font-size:32px;margin-bottom:8px;">❌</div>
+          <div style="font-size:12px;margin-bottom:4px;">${base.name}</div>
+          <div style="font-size:11px;word-break:break-all;color:#64748b;">${urlItem.url}</div>
+          <div style="font-size:11px;margin-top:4px;">${err.message}</div>
+        </div>
+      `;
+      resultGrid.appendChild(card);
+    }
+
+    const pct = Math.round((i + 1) / total * 100);
+    progressFill.style.width = pct + '%';
+    progressText.textContent = `${i + 1} / ${total}（${pct}%）`;
+  }
+
+  resultCount.textContent = compositeResults.filter(r => !r.error).length;
+
+  composeBtn.disabled = false;
+  downloadAllBtn.disabled = compositeResults.filter(r => !r.error).length === 0;
+  progressText.textContent = `完成！成功 ${compositeResults.filter(r => !r.error).length} 张，失败 ${compositeResults.filter(r => r.error).length} 张`;
+}
+
+// Convert Y coordinate based on origin
+function toCanvasY(canvasH, y, h, origin) {
+  return origin === 'tl' ? y : canvasH - y - h;
+}
+
+function compositeImage(baseImg, overlayImg, x, y, origin, textX, textY, textStr, radii, labelImg, labelX, labelY, labelOrigin) {
+  const canvas = document.createElement('canvas');
+  canvas.width = baseImg.naturalWidth;
+  canvas.height = baseImg.naturalHeight;
+  const ctx = canvas.getContext('2d');
+  const ch = canvas.height;
+
+  // Draw base
+  ctx.drawImage(baseImg, 0, 0);
+
+  // Overlay position
+  const canvasY = toCanvasY(ch, y, overlayImg.naturalHeight, origin);
+
+  // Draw overlay with optional rounded corners
+  const hasRadius = radii.some(r => r > 0);
+  if (hasRadius) {
+    ctx.save();
+    ctx.beginPath();
+    const [tl, tr, br, bl] = radii;
+    const w = overlayImg.naturalWidth, h = overlayImg.naturalHeight;
+    ctx.moveTo(x + tl, canvasY);
+    ctx.lineTo(x + w - tr, canvasY);
+    ctx.quadraticCurveTo(x + w, canvasY, x + w, canvasY + tr);
+    ctx.lineTo(x + w, canvasY + h - br);
+    ctx.quadraticCurveTo(x + w, canvasY + h, x + w - br, canvasY + h);
+    ctx.lineTo(x + bl, canvasY + h);
+    ctx.quadraticCurveTo(x, canvasY + h, x, canvasY + h - bl);
+    ctx.lineTo(x, canvasY + tl);
+    ctx.quadraticCurveTo(x, canvasY, x + tl, canvasY);
+    ctx.closePath();
+    ctx.clip();
+  }
+  ctx.drawImage(overlayImg, x, canvasY, overlayImg.naturalWidth, overlayImg.naturalHeight);
+  if (hasRadius) ctx.restore();
+
+  // Draw "广告" label (independent origin)
+  if (labelImg && labelX !== undefined && labelY !== undefined) {
+    const labelCanvasY = toCanvasY(ch, labelY, labelImg.naturalHeight, labelOrigin);
+    ctx.drawImage(labelImg, labelX, labelCanvasY, labelImg.naturalWidth, labelImg.naturalHeight);
+  }
+
+  // Draw text "猜你喜欢" (uses same origin as overlay)
+  if (textX !== undefined && textY !== undefined && textStr) {
+    const textCanvasY = toCanvasY(ch, textY, 0, origin);
+    ctx.font = '70px "Alibaba PuHuiTi", "PingFang SC", "Microsoft YaHei", sans-serif';
+    ctx.fillStyle = '#FFFFFF';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(textStr, textX, textCanvasY);
+  }
+
+  return canvas.toDataURL('image/png');
+}
+
+// --- Download ---
+function dataURLtoBlob(dataURL) {
+  const parts = dataURL.split(',');
+  const mime = parts[0].match(/:(.*?);/)[1];
+  const bytes = atob(parts[1]);
+  const arr = new Uint8Array(bytes.length);
+  for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+  return new Blob([arr], { type: mime });
+}
+
+function downloadSingle(dataURL, name) {
+  const a = document.createElement('a');
+  a.href = dataURL;
+  a.download = name;
+  a.click();
+}
+
+async function downloadAll() {
+  const valid = compositeResults.filter(r => !r.error);
+  if (!valid.length) return;
+
+  const zip = new JSZip();
+  const nameCount = {};
+
+  for (const item of valid) {
+    let name = item.outName;
+    if (nameCount[name]) {
+      const parts = name.split('.');
+      name = parts[0] + '_' + nameCount[name] + '.' + (parts[1] || 'png');
+    }
+    nameCount[item.outName] = (nameCount[item.outName] || 0) + 1;
+    zip.file(name, item.blob);
+  }
+
+  const content = await zip.generateAsync({ type: 'blob' });
+  saveAs(content, `合成图_${new Date().toISOString().slice(0,10)}.zip`);
+  toast(`已打包 ${valid.length} 张图片`, 'success');
+}
+
+// --- Helpers ---
+function updateBtn() {
+  composeBtn.disabled = !(baseImages.length && excelUrls.length);
+  const total = Math.min(baseImages.length, excelUrls.length);
+  composeBtn.textContent = total ? `🎨 开始合成（${total} 张，一一对应）` : '🎨 开始合成';
+}
+
+function toast(msg, type = 'info') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+</script>
+</body>
+</html>
