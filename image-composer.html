@@ -116,6 +116,7 @@ input[type="file"] { display: none; }
     <button class="slot-tab" data-slot="1">📺 MI-01-剧集详情页</button>
     <button class="slot-tab" data-slot="2">📱 MI-影剧综01-OTT信息流</button>
     <button class="slot-tab" data-slot="3">🏠 HI-首页推荐</button>
+    <button class="slot-tab" data-slot="4">🔖 HI-01-角标</button>
   </div>
 
   <!-- Slot config: 影视角标 -->
@@ -134,8 +135,13 @@ input[type="file"] { display: none; }
     </div>
     <div class="slot-text-fields">
       <div class="pos-input">
-        <label>文字：</label>X<input type="number" class="slot-textX" value="63" min="0">
+        <label>文字内容：</label>
+        <input type="text" class="slot-textStr" value="猜你喜欢" style="width:120px;padding:4px 8px;border-radius:4px;border:1px solid #475569;background:#0f172a;color:#e2e8f0;">
+      </div>
+      <div class="pos-input">
+        <label>文字位置：</label>X<input type="number" class="slot-textX" value="63" min="0">
         Y<input type="number" class="slot-textY" value="378" min="0">
+        字号<input type="number" class="slot-fontSize" value="70" min="1" max="200" style="width:50px">px
       </div>
     </div>
     <div class="slot-label-fields" style="display:none">
@@ -166,8 +172,13 @@ input[type="file"] { display: none; }
     </div>
     <div class="slot-text-fields" style="display:none">
       <div class="pos-input">
-        <label>文字：</label>X<input type="number" class="slot-textX" value="63" min="0">
+        <label>文字内容：</label>
+        <input type="text" class="slot-textStr" value="猜你喜欢" style="width:120px;padding:4px 8px;border-radius:4px;border:1px solid #475569;background:#0f172a;color:#e2e8f0;">
+      </div>
+      <div class="pos-input">
+        <label>文字位置：</label>X<input type="number" class="slot-textX" value="63" min="0">
         Y<input type="number" class="slot-textY" value="378" min="0">
+        字号<input type="number" class="slot-fontSize" value="70" min="1" max="200" style="width:50px">px
       </div>
     </div>
     <div class="slot-label-fields">
@@ -198,8 +209,13 @@ input[type="file"] { display: none; }
     </div>
     <div class="slot-text-fields" style="display:none">
       <div class="pos-input">
-        <label>文字：</label>X<input type="number" class="slot-textX" value="63" min="0">
+        <label>文字内容：</label>
+        <input type="text" class="slot-textStr" value="猜你喜欢" style="width:120px;padding:4px 8px;border-radius:4px;border:1px solid #475569;background:#0f172a;color:#e2e8f0;">
+      </div>
+      <div class="pos-input">
+        <label>文字位置：</label>X<input type="number" class="slot-textX" value="63" min="0">
         Y<input type="number" class="slot-textY" value="378" min="0">
+        字号<input type="number" class="slot-fontSize" value="70" min="1" max="200" style="width:50px">px
       </div>
     </div>
     <div class="slot-label-fields">
@@ -230,8 +246,13 @@ input[type="file"] { display: none; }
     </div>
     <div class="slot-text-fields" style="display:none">
       <div class="pos-input">
-        <label>文字：</label>X<input type="number" class="slot-textX" value="63" min="0">
+        <label>文字内容：</label>
+        <input type="text" class="slot-textStr" value="猜你喜欢" style="width:120px;padding:4px 8px;border-radius:4px;border:1px solid #475569;background:#0f172a;color:#e2e8f0;">
+      </div>
+      <div class="pos-input">
+        <label>文字位置：</label>X<input type="number" class="slot-textX" value="63" min="0">
         Y<input type="number" class="slot-textY" value="378" min="0">
+        字号<input type="number" class="slot-fontSize" value="70" min="1" max="200" style="width:50px">px
       </div>
     </div>
     <div class="slot-label-fields">
@@ -242,6 +263,43 @@ input[type="file"] { display: none; }
       <div class="pos-input">
         <label>标签位置：</label>X<input type="number" class="slot-labelX" value="544" min="0">
         Y<input type="number" class="slot-labelY" value="867" min="0">
+      </div>
+    </div>
+  </div>
+
+  <!-- Slot config: HI-01-角标 -->
+  <div class="slot-config" id="slotConfig4">
+    <div class="pos-input">
+      <label>原点：</label>
+      <select class="slot-origin"><option value="bl" selected>左下角</option><option value="tl">左上角</option></select>
+    </div>
+    <div class="pos-input">
+      <label>商品图位置：</label>X<input type="number" class="slot-posX" value="0" min="0">
+      Y<input type="number" class="slot-posY" value="0" min="0">
+      圆角 左上<input type="number" class="slot-radiusTL" value="0" min="0" max="200" style="width:50px">
+      右上<input type="number" class="slot-radiusTR" value="0" min="0" max="200" style="width:50px">
+      右下<input type="number" class="slot-radiusBR" value="0" min="0" max="200" style="width:50px">
+      左下<input type="number" class="slot-radiusBL" value="0" min="0" max="200" style="width:50px">px
+    </div>
+    <div class="slot-text-fields">
+      <div class="pos-input">
+        <label>文字内容：</label>
+        <input type="text" class="slot-textStr" value="广告" style="width:120px;padding:4px 8px;border-radius:4px;border:1px solid #475569;background:#0f172a;color:#e2e8f0;">
+      </div>
+      <div class="pos-input">
+        <label>文字位置：</label>X<input type="number" class="slot-textX" value="477" min="0">
+        Y<input type="number" class="slot-textY" value="275" min="0">
+        字号<input type="number" class="slot-fontSize" value="20" min="1" max="200" style="width:50px">px
+      </div>
+    </div>
+    <div class="slot-label-fields" style="display:none">
+      <div class="pos-input">
+        <label>标签原点：</label>
+        <select class="slot-labelOrigin"><option value="bl" selected>左下角</option><option value="tl">左上角</option></select>
+      </div>
+      <div class="pos-input">
+        <label>标签位置：</label>X<input type="number" class="slot-labelX" value="1780" min="0">
+        Y<input type="number" class="slot-labelY" value="60" min="0">
       </div>
     </div>
   </div>
@@ -403,14 +461,14 @@ document.getElementById('slotTabs').addEventListener('click', function(e) {
   document.querySelectorAll('.slot-config').forEach(c => c.classList.remove('active'));
   const config = document.getElementById('slotConfig' + activeSlot);
   config.classList.add('active');
-  // 影视角标（slot 0）隐藏标签配置和标签上传按钮
+  // 影视角标（slot 0）和角标（slot 4）隐藏标签配置和标签上传按钮
   config.querySelectorAll('.slot-label-fields').forEach(el => {
-    el.style.display = activeSlot === 0 ? 'none' : '';
+    el.style.display = (activeSlot === 0 || activeSlot === 4) ? 'none' : '';
   });
   config.querySelectorAll('.slot-text-fields').forEach(el => {
-    el.style.display = activeSlot === 0 ? '' : 'none';
+    el.style.display = (activeSlot === 0 || activeSlot === 4) ? '' : 'none';
   });
-  document.getElementById('labelUploadSection').style.display = activeSlot === 0 ? 'none' : '';
+  document.getElementById('labelUploadSection').style.display = (activeSlot === 0 || activeSlot === 4) ? 'none' : '';
   // 非影视角标资源位按钮上移20px
   document.querySelector('.controls').style.marginTop = activeSlot === 0 ? '24px' : '-14px';
   // 切换资源位时更新标签状态显示
@@ -440,7 +498,7 @@ function updateLabelStatus() {
 
 // 从 localStorage 恢复已保存的标签图片
 (async function restoreLabels() {
-  for (let i = 0; i <= 3; i++) {
+  for (let i = 0; i <= 4; i++) {
     const dataUrl = localStorage.getItem('label_slot_' + i);
     if (dataUrl) {
       try {
@@ -566,6 +624,10 @@ async function startCompose() {
   const radii = [radiusTL, radiusTR, radiusBR, radiusBL];
   const textX  = parseInt(cfg.querySelector('.slot-textX').value) || 0;
   const textY  = parseInt(cfg.querySelector('.slot-textY').value) || 0;
+  let textStr = '';
+  const textStrEl = cfg.querySelector('.slot-textStr');
+  if (textStrEl) textStr = textStrEl.value.trim();
+  const fontSize = parseInt(cfg.querySelector('.slot-fontSize').value) || 30;
   const labelX = parseInt(cfg.querySelector('.slot-labelX').value) || 0;
   const labelY = parseInt(cfg.querySelector('.slot-labelY').value) || 0;
   // 一一对应：第N张底图 + 第N个URL → 第N张合成图
@@ -586,8 +648,7 @@ async function startCompose() {
     const urlItem = excelUrls[i];
     try {
       const overlayImg = await loadImageFromUrl(urlItem.url);
-      const textStr = activeSlot === 0 ? '猜你喜欢' : '';
-      const composite = compositeImage(base.img, overlayImg, posX, posY, origin, textX, textY, textStr, radii, labelImgs[activeSlot], labelX, labelY, labelOrigin);
+      const composite = compositeImage(base.img, overlayImg, posX, posY, origin, textX, textY, textStr, radii, labelImgs[activeSlot], labelX, labelY, labelOrigin, fontSize);
       const blob = dataURLtoBlob(composite);
       // 用店铺名命名，没有则用底图+URL序号
       const shopName = urlItem.shopName || '';
@@ -647,7 +708,7 @@ function toCanvasY(canvasH, y, h, origin) {
   return origin === 'tl' ? y : canvasH - y - h;
 }
 
-function compositeImage(baseImg, overlayImg, x, y, origin, textX, textY, textStr, radii, labelImg, labelX, labelY, labelOrigin) {
+function compositeImage(baseImg, overlayImg, x, y, origin, textX, textY, textStr, radii, labelImg, labelX, labelY, labelOrigin, fontSize) {
   const canvas = document.createElement('canvas');
   canvas.width = baseImg.naturalWidth;
   canvas.height = baseImg.naturalHeight;
@@ -688,10 +749,10 @@ function compositeImage(baseImg, overlayImg, x, y, origin, textX, textY, textStr
     ctx.drawImage(labelImg, labelX, labelCanvasY, labelImg.naturalWidth, labelImg.naturalHeight);
   }
 
-  // Draw text "猜你喜欢" (uses same origin as overlay)
+  // Draw text (uses same origin as overlay)
   if (textX !== undefined && textY !== undefined && textStr) {
     const textCanvasY = toCanvasY(ch, textY, 0, origin);
-    ctx.font = '70px "Alibaba PuHuiTi", "PingFang SC", "Microsoft YaHei", sans-serif';
+    ctx.font = fontSize + 'px "Alibaba PuHuiTi", "PingFang SC", "Microsoft YaHei", sans-serif';
     ctx.fillStyle = '#FFFFFF';
     ctx.textBaseline = 'bottom';
     ctx.fillText(textStr, textX, textCanvasY);
