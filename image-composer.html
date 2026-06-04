@@ -469,8 +469,8 @@ document.getElementById('slotTabs').addEventListener('click', function(e) {
     el.style.display = (activeSlot === 0 || activeSlot === 4) ? '' : 'none';
   });
   document.getElementById('labelUploadSection').style.display = (activeSlot === 0 || activeSlot === 4) ? 'none' : '';
-  // 非影视角标资源位按钮上移20px
-  document.querySelector('.controls').style.marginTop = activeSlot === 0 ? '24px' : '-14px';
+  // MI-01、MI-影剧综、HI-首页推荐按钮上移20px，影视角标和角标保持24px
+  document.querySelector('.controls').style.marginTop = (activeSlot >= 1 && activeSlot <= 3) ? '-14px' : '24px';
   // 切换资源位时更新标签状态显示
   updateLabelStatus();
 });
