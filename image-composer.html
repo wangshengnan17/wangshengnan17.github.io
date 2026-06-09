@@ -627,6 +627,8 @@ async function startCompose() {
   let textStr = '';
   const textStrEl = cfg.querySelector('.slot-textStr');
   if (textStrEl) textStr = textStrEl.value.trim();
+  // 只有展示文字输入框的资源位才合成文字（影视角标、角标）
+  const showText = (activeSlot === 0 || activeSlot === 4) && textStr;
   const fontSize = parseInt(cfg.querySelector('.slot-fontSize').value) || 30;
   const labelX = parseInt(cfg.querySelector('.slot-labelX').value) || 0;
   const labelY = parseInt(cfg.querySelector('.slot-labelY').value) || 0;
@@ -648,7 +650,7 @@ async function startCompose() {
     const urlItem = excelUrls[i];
     try {
       const overlayImg = await loadImageFromUrl(urlItem.url);
-      const composite = compositeImage(base.img, overlayImg, posX, posY, origin, textX, textY, textStr, radii, labelImgs[activeSlot], labelX, labelY, labelOrigin, fontSize);
+      const composite = compositeImage(base.img, overlayImg, posX, posY, origin, textX, textY, showText ? textStr : '', radii, labelImgs[activeSlot], labelX, labelY, labelOrigin, fontSize);
       const blob = dataURLtoBlob(composite);
       // 用店铺名命名，没有则用底图+URL序号
       const shopName = urlItem.shopName || '';
