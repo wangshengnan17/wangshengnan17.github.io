@@ -111,6 +111,12 @@ input[type="file"] { display: none; }
   <input type="file" id="baseInput" webkitdirectory multiple accept="image/*">
   <input type="file" id="excelInput" accept=".xlsx,.xls,.csv">
 
+  <!-- 解析结果诊断面板 -->
+  <div id="urlPreview" style="display:none;background:#1e293b;border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:12px;line-height:1.7;max-height:180px;overflow:auto;">
+    <div style="color:#94a3b8;margin-bottom:6px;">🔍 解析到的链接（前 10 条）：</div>
+    <div id="urlPreviewList" style="font-family:monospace;color:#cbd5e1;word-break:break-all;"></div>
+  </div>
+
   <!-- Resource slot selector -->
   <div class="slot-tabs" id="slotTabs">
     <button class="slot-tab active" data-slot="0">🎬 影视角标</button>
@@ -390,7 +396,6 @@ document.getElementById('excelInput').addEventListener('change', async function(
     const data = await file.arrayBuffer();
     const wb = XLSX.read(data);
     excelUrls = [];
-    const seen = {};
 
     // 遍历所有工作表，兼容多 sheet 的素材表
     for (const sheetName of wb.SheetNames) {
@@ -398,17 +403,23 @@ document.getElementById('excelInput').addEventListener('change', async function(
       if (!sheet) continue;
       const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
 
-      // 收集单元格超链接（Excel 里"显示文字 ≠ 真实链接"的常见情况）
+      // 收集单元格里的真实链接：超链接关系 + HYPERLINK 公式
       const linkMap = {};
       Object.keys(sheet).forEach(addr => {
         if (addr.charAt(0) === '!') return;
         const cell = sheet[addr];
-        if (cell && cell.l && cell.l.Target) {
-          try {
-            const pos = XLSX.utils.decode_cell(addr);
-            linkMap[pos.r + ',' + pos.c] = String(cell.l.Target);
-          } catch (err) {}
+        if (!cell || typeof cell !== 'object') return;
+        let url = '';
+        if (cell.l && cell.l.Target) url = String(cell.l.Target);
+        if (!url && cell.f) {
+          const m = String(cell.f).match(/HYPERLINK\s*\(\s*["']([^"']+)["']/i);
+          if (m) url = m[1];
         }
+        if (!url) return;
+        try {
+          const pos = XLSX.utils.decode_cell(addr);
+          linkMap[pos.r + ',' + pos.c] = url;
+        } catch (err) {}
       });
 
       for (let i = 0; i < rows.length; i++) {
@@ -421,9 +432,8 @@ document.getElementById('excelInput').addEventListener('change', async function(
         }
         if (!candidates.length) continue;
         // 一行多个链接时，优先选看起来像图片的那个
-        let picked = candidates.find(c => looksLikeImage(c.url)) || candidates[0];
-        if (seen[picked.url]) continue;
-        seen[picked.url] = true;
+        const picked = candidates.find(c => looksLikeImage(c.url)) || candidates[0];
+        // 不做跨行去重：不同行可能合法地使用同一张图片
         // 店铺名取 A 列；若 A 列本身就是链接则不作为店铺名
         let shopName = String(row[0] || '').trim();
         if (/^https?:\/\//i.test(shopName)) shopName = '';
@@ -434,6 +444,17 @@ document.getElementById('excelInput').addEventListener('change', async function(
     excelCount.textContent = excelUrls.length
       ? `✅ ${excelUrls.length} 个图片 URL${excelUrls.some(u => u.shopName) ? '（已识别店铺名）' : ''}`
       : '⚠️ 未检测到图片 URL';
+    // 诊断面板：直接把解析结果显示在页面上
+    const pv = document.getElementById('urlPreview');
+    const pvList = document.getElementById('urlPreviewList');
+    if (excelUrls.length) {
+      pv.style.display = '';
+      pvList.innerHTML = excelUrls.slice(0, 10).map((u, i) =>
+        `${i + 1}. ${u.shopName ? '[' + escapeHtml(u.shopName) + '] ' : ''}${escapeHtml(u.url)}`
+      ).join('<br>') + (excelUrls.length > 10 ? `<br>… 共 ${excelUrls.length} 条` : '');
+    } else {
+      pv.style.display = 'none';
+    }
     if (excelUrls.length) {
       console.log('解析到的链接：', excelUrls);
       toast(`解析到 ${excelUrls.length} 个链接，首条：${excelUrls[0].url.slice(0, 60)}…`, 'info');
@@ -446,6 +467,13 @@ document.getElementById('excelInput').addEventListener('change', async function(
     excelCount.textContent = '❌ 解析失败';
   }
 });
+
+// 转义 HTML，防止表格内容注入
+function escapeHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
 
 // 从任意文本中提取 http(s) 链接（不要求以链接开头）
 function extractUrl(text) {
