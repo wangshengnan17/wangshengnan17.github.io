@@ -6,8 +6,11 @@
 <title>图片合成工具</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎨</text></svg>">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>window.XLSX || document.write('<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"><\/script>');</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>window.JSZip || document.write('<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"><\/script>');</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<script>window.saveAs || document.write('<script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"><\/script>');</script>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 @font-face {
@@ -16,20 +19,20 @@
   font-display: swap;
 }
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
-.header { background: linear-gradient(135deg, #1e293b, #0f172a); border-bottom: 1px solid #334155; padding: 20px 32px; text-align: center; }
-.header h1 { font-size: 24px; font-weight: 700; color: #38bdf8; }
-.header p { color: #94a3b8; font-size: 14px; margin-top: 4px; }
-.container { max-width: 1200px; margin: 0 auto; padding: 24px 16px; }
+.header { background: linear-gradient(135deg, #1e293b, #0f172a); border-bottom: 1px solid #334155; padding: 10px 32px; text-align: center; }
+.header h1 { font-size: 19px; font-weight: 700; color: #38bdf8; }
+.header p { color: #94a3b8; font-size: 12px; margin-top: 2px; }
+.container { max-width: 1200px; margin: 0 auto; padding: 10px 16px; }
 
 /* Upload area */
-.upload-section { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 36px; }
-.upload-card { flex: 1; min-width: 280px; background: #1e293b; border: 2px dashed #475569; border-radius: 12px; padding: 32px 20px; text-align: center; cursor: pointer; transition: all 0.2s; }
+.upload-section { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.upload-card { flex: 1; min-width: 280px; background: #1e293b; border: 2px dashed #475569; border-radius: 12px; padding: 12px 16px; text-align: center; cursor: pointer; transition: all 0.2s; }
 .upload-card:hover { border-color: #38bdf8; background: #1e293bdd; }
 .upload-card.active { border-color: #38bdf8; border-style: solid; background: #0f2744; }
-.upload-card .icon { font-size: 40px; margin-bottom: 12px; }
-.upload-card h3 { font-size: 16px; margin-bottom: 6px; }
+.upload-card .icon { font-size: 22px; margin-bottom: 2px; }
+.upload-card h3 { font-size: 14px; margin-bottom: 2px; }
 .upload-card .hint { font-size: 12px; color: #64748b; }
-.upload-card .count { margin-top: 10px; font-size: 13px; color: #38bdf8; font-weight: 600; }
+.upload-card .count { margin-top: 4px; font-size: 12px; color: #38bdf8; font-weight: 600; min-height: 16px; }
 input[type="file"] { display: none; }
 
 /* Controls */
@@ -43,12 +46,17 @@ input[type="file"] { display: none; }
 .btn-success { background: #22c55e; color: #fff; box-shadow: 0 4px 12px rgba(34,197,94,0.3); }
 .btn-success:hover { background: #4ade80; box-shadow: 0 6px 20px rgba(34,197,94,0.5); transform: translateY(-1px); }
 
-/* 兜底：粘贴链接 */
-.paste-box { background: #1e293b; border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; }
-.paste-box .paste-title { font-size: 13px; color: #94a3b8; margin-bottom: 8px; }
-.paste-box textarea { width: 100%; box-sizing: border-box; height: 92px; resize: vertical; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: #e2e8f0; padding: 10px; font-size: 13px; font-family: ui-monospace, monospace; line-height: 1.6; }
+/* 兜底：粘贴链接（折叠） */
+.paste-box { background: #1e293b; border-radius: 8px; margin-bottom: 8px; }
+.paste-box summary { cursor: pointer; font-size: 12px; color: #94a3b8; padding: 7px 14px; list-style: none; user-select: none; }
+.paste-box summary::-webkit-details-marker { display: none; }
+.paste-box summary::before { content: '▸ '; color: #38bdf8; }
+.paste-box[open] summary::before { content: '▾ '; }
+.paste-box summary:hover { color: #cbd5e1; }
+.paste-box > div, .paste-box textarea, .paste-box button { margin: 0 14px 10px; }
+.paste-box textarea { width: calc(100% - 28px); box-sizing: border-box; height: 88px; resize: vertical; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: #e2e8f0; padding: 10px; font-size: 13px; font-family: ui-monospace, monospace; line-height: 1.6; }
 .paste-box textarea:focus { outline: none; border-color: #38bdf8; }
-.paste-box .btn { padding: 8px 20px; font-size: 13px; margin-top: 8px; }
+.paste-box button { padding: 7px 18px !important; font-size: 13px !important; }
 
 /* Position input */
 .pos-input { display: flex; align-items: center; gap: 4px; background: #1e293b; padding: 2px 16px; border-radius: 8px; font-size: 14px; }
@@ -75,8 +83,8 @@ input[type="file"] { display: none; }
 .btn-download-single:hover { background: #334155; }
 
 /* Slot tabs */
-.slot-tabs { display: flex; gap: 4px; margin: 24px 0 16px; background: #1e293b; border-radius: 10px; padding: 4px; }
-.slot-tab { flex: 1; padding: 8px 12px; text-align: center; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; color: #94a3b8; transition: all 0.2s; border: none; background: none; }
+.slot-tabs { display: flex; gap: 4px; margin: 10px 0 10px; background: #1e293b; border-radius: 10px; padding: 4px; }
+.slot-tab { flex: 1; padding: 7px 12px; text-align: center; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; color: #94a3b8; transition: all 0.2s; border: none; background: none; }
 .slot-tab:hover { color: #e2e8f0; }
 .slot-tab.active { background: #38bdf8; color: #0f172a; }
 .slot-config { display: none; }
@@ -100,6 +108,7 @@ input[type="file"] { display: none; }
 </div>
 
 <div class="container">
+  <div id="libWarn" style="display:none;background:#7f1d1d;border:1px solid #ef4444;border-radius:8px;padding:9px 14px;margin-bottom:8px;font-size:12.5px;line-height:1.6;color:#fecaca;"></div>
   <!-- Upload -->
   <div class="upload-section">
     <div class="upload-card" id="baseCard" onclick="document.getElementById('baseInput').click()">
@@ -118,15 +127,15 @@ input[type="file"] { display: none; }
   <input type="file" id="baseInput" webkitdirectory multiple accept="image/*">
   <input type="file" id="excelInput" accept=".xlsx,.xls,.csv">
 
-  <!-- 兜底：直接粘贴链接 -->
-  <div class="paste-box">
-    <div class="paste-title">✍️ Excel 解析不出来的话，直接粘贴链接（每行一个）</div>
+  <!-- 兜底：直接粘贴链接（默认折叠，点击展开） -->
+  <details class="paste-box">
+    <summary>✍️ Excel 解析不出来？点这里直接粘贴链接</summary>
     <textarea id="urlTextarea" placeholder="https://img.alicdn.com/xxx/a.jpg&#10;张三店铺,https://img.alicdn.com/xxx/b.jpg&#10;//img.alicdn.com/xxx/c.jpg"></textarea>
     <button class="btn btn-secondary" id="applyUrlsBtn">应用粘贴的链接</button>
-  </div>
+  </details>
 
   <!-- 解析结果诊断面板 -->
-  <div id="urlPreview" style="display:none;background:#1e293b;border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:12px;line-height:1.7;max-height:180px;overflow:auto;">
+  <div id="urlPreview" style="display:none;background:#1e293b;border-radius:10px;padding:10px 14px;margin-bottom:8px;font-size:12px;line-height:1.7;max-height:180px;overflow:auto;">
     <div style="color:#94a3b8;margin-bottom:6px;">🔍 解析到的链接（前 10 条）：</div>
     <div id="urlPreviewList" style="font-family:monospace;color:#cbd5e1;word-break:break-all;"></div>
   </div>
@@ -357,7 +366,7 @@ input[type="file"] { display: none; }
   </div>
 
   <div style="text-align:center;color:#475569;font-size:12px;padding:28px 0 10px;">
-    图片合成工具 · 版本 v7（2026-09-14）
+    图片合成工具 · 版本 v8（2026-09-14）
   </div>
 </div>
 
@@ -409,6 +418,14 @@ document.getElementById('excelInput').addEventListener('change', async function(
 
   excelCard.classList.add('active');
   excelCount.textContent = '正在解析...';
+
+  // 先确认解析库在，否则直接给出明确原因
+  if (typeof XLSX === 'undefined') {
+    excelCount.textContent = '❌ 解析库未加载';
+    checkLibs();
+    toast('Excel 解析库没加载出来（网络拦截了 CDN），不是表格问题。请刷新或用「直接粘贴链接」', 'error');
+    return;
+  }
 
   try {
     const data = await file.arrayBuffer();
@@ -935,6 +952,28 @@ function toast(msg, type = 'info') {
   el.textContent = msg;
   document.body.appendChild(el);
   setTimeout(() => el.remove(), 3000);
+}
+
+// --- 依赖库自检：cdnjs 被墙时给出明确提示，避免误以为是表格问题 ---
+function checkLibs() {
+  const missing = [];
+  if (typeof XLSX === 'undefined') missing.push('XLSX（Excel 解析）');
+  if (typeof JSZip === 'undefined') missing.push('JSZip（批量打包）');
+  if (typeof saveAs === 'undefined') missing.push('FileSaver（下载）');
+  const el = document.getElementById('libWarn');
+  if (missing.length) {
+    el.style.display = '';
+    el.innerHTML = '⚠️ <b>依赖库没加载出来</b>：' + missing.join('、') +
+      '<br>说明网络拦截了 CDN，<b>不是表格的问题</b>。解决办法：刷新重试，或用下方「直接粘贴链接」绕过 Excel。';
+  } else {
+    el.style.display = 'none';
+  }
+  return missing;
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => setTimeout(checkLibs, 600));
+} else {
+  setTimeout(checkLibs, 600);
 }
 </script>
 </body>
