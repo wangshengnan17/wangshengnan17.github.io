@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>图片合成工具</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎨</text></svg>">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
@@ -388,35 +389,77 @@ document.getElementById('excelInput').addEventListener('change', async function(
   try {
     const data = await file.arrayBuffer();
     const wb = XLSX.read(data);
-    const sheet = wb.Sheets[wb.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-
     excelUrls = [];
-    for (let i = 0; i < rows.length; i++) {
-      for (let j = 0; j < rows[i].length; j++) {
-        const cell = String(rows[i][j] || '').trim();
-        if (/^https?:\/\/.+\.(png|jpe?g|webp|gif|bmp|svg)/i.test(cell) || /^https?:\/\/.*(img|image|photo|pic)/i.test(cell)) {
-          // 店铺名称取A列（第1列）
-          const shopName = String((rows[i] || [])[0] || '').trim();
-          excelUrls.push({ url: cell, row: i + 1, col: j + 1, shopName });
-        }
-      }
-    }
+    const seen = {};
 
-    // Also try to auto-detect URL column
-    if (excelUrls.length === 0) {
-      excelUrls = detectUrlColumn(rows);
+    // 遍历所有工作表，兼容多 sheet 的素材表
+    for (const sheetName of wb.SheetNames) {
+      const sheet = wb.Sheets[sheetName];
+      if (!sheet) continue;
+      const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+
+      // 收集单元格超链接（Excel 里"显示文字 ≠ 真实链接"的常见情况）
+      const linkMap = {};
+      Object.keys(sheet).forEach(addr => {
+        if (addr.charAt(0) === '!') return;
+        const cell = sheet[addr];
+        if (cell && cell.l && cell.l.Target) {
+          try {
+            const pos = XLSX.utils.decode_cell(addr);
+            linkMap[pos.r + ',' + pos.c] = String(cell.l.Target);
+          } catch (err) {}
+        }
+      });
+
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i] || [];
+        const candidates = [];
+        for (let j = 0; j < row.length; j++) {
+          // 优先取超链接目标，其次从单元格文本里提取 URL
+          const candidate = linkMap[i + ',' + j] || extractUrl(row[j]);
+          if (candidate) candidates.push({ url: candidate, col: j });
+        }
+        if (!candidates.length) continue;
+        // 一行多个链接时，优先选看起来像图片的那个
+        let picked = candidates.find(c => looksLikeImage(c.url)) || candidates[0];
+        if (seen[picked.url]) continue;
+        seen[picked.url] = true;
+        // 店铺名取 A 列；若 A 列本身就是链接则不作为店铺名
+        let shopName = String(row[0] || '').trim();
+        if (/^https?:\/\//i.test(shopName)) shopName = '';
+        excelUrls.push({ url: picked.url, row: i + 1, col: picked.col + 1, shopName });
+      }
     }
 
     excelCount.textContent = excelUrls.length
       ? `✅ ${excelUrls.length} 个图片 URL${excelUrls.some(u => u.shopName) ? '（已识别店铺名）' : ''}`
       : '⚠️ 未检测到图片 URL';
+    if (excelUrls.length) {
+      console.log('解析到的链接：', excelUrls);
+      toast(`解析到 ${excelUrls.length} 个链接，首条：${excelUrls[0].url.slice(0, 60)}…`, 'info');
+    } else {
+      toast('未检测到链接，请确认表格中有 http/https 开头的图片链接', 'error');
+    }
     updateBtn();
   } catch (err) {
     toast('Excel 解析失败：' + err.message, 'error');
     excelCount.textContent = '❌ 解析失败';
   }
 });
+
+// 从任意文本中提取 http(s) 链接（不要求以链接开头）
+function extractUrl(text) {
+  if (text === null || text === undefined) return '';
+  const s = String(text);
+  const m = s.match(/https?:\/\/[^\s"'<>，。；、：（）【】《》,;]+/i);
+  return m ? m[0] : '';
+}
+
+// 判断链接是否像图片（用于一行多个链接时择优）
+function looksLikeImage(url) {
+  return /\.(png|jpe?g|webp|gif|bmp|svg|avif|tiff?)(\?|#|$)/i.test(url) ||
+         /(img|image|photo|pic|oss|cdn|alicdn|tfs|素材)/i.test(url);
+}
 
 function detectUrlColumn(rows) {
   // Find columns that look like URLs
