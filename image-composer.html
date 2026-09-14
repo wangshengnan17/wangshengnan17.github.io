@@ -43,6 +43,13 @@ input[type="file"] { display: none; }
 .btn-success { background: #22c55e; color: #fff; box-shadow: 0 4px 12px rgba(34,197,94,0.3); }
 .btn-success:hover { background: #4ade80; box-shadow: 0 6px 20px rgba(34,197,94,0.5); transform: translateY(-1px); }
 
+/* 兜底：粘贴链接 */
+.paste-box { background: #1e293b; border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; }
+.paste-box .paste-title { font-size: 13px; color: #94a3b8; margin-bottom: 8px; }
+.paste-box textarea { width: 100%; box-sizing: border-box; height: 92px; resize: vertical; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: #e2e8f0; padding: 10px; font-size: 13px; font-family: ui-monospace, monospace; line-height: 1.6; }
+.paste-box textarea:focus { outline: none; border-color: #38bdf8; }
+.paste-box .btn { padding: 8px 20px; font-size: 13px; margin-top: 8px; }
+
 /* Position input */
 .pos-input { display: flex; align-items: center; gap: 4px; background: #1e293b; padding: 2px 16px; border-radius: 8px; font-size: 14px; }
 .pos-input label { color: #94a3b8; }
@@ -110,6 +117,13 @@ input[type="file"] { display: none; }
   </div>
   <input type="file" id="baseInput" webkitdirectory multiple accept="image/*">
   <input type="file" id="excelInput" accept=".xlsx,.xls,.csv">
+
+  <!-- 兜底：直接粘贴链接 -->
+  <div class="paste-box">
+    <div class="paste-title">✍️ Excel 解析不出来的话，直接粘贴链接（每行一个）</div>
+    <textarea id="urlTextarea" placeholder="https://img.alicdn.com/xxx/a.jpg&#10;张三店铺,https://img.alicdn.com/xxx/b.jpg&#10;//img.alicdn.com/xxx/c.jpg"></textarea>
+    <button class="btn btn-secondary" id="applyUrlsBtn">应用粘贴的链接</button>
+  </div>
 
   <!-- 解析结果诊断面板 -->
   <div id="urlPreview" style="display:none;background:#1e293b;border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:12px;line-height:1.7;max-height:180px;overflow:auto;">
@@ -343,7 +357,7 @@ input[type="file"] { display: none; }
   </div>
 
   <div style="text-align:center;color:#475569;font-size:12px;padding:28px 0 10px;">
-    图片合成工具 · 版本 v6（2026-09-14）
+    图片合成工具 · 版本 v7（2026-09-14）
   </div>
 </div>
 
@@ -445,31 +459,53 @@ document.getElementById('excelInput').addEventListener('change', async function(
       }
     }
 
-    excelCount.textContent = excelUrls.length
-      ? `✅ ${excelUrls.length} 个图片 URL${excelUrls.some(u => u.shopName) ? '（已识别店铺名）' : ''}`
-      : '⚠️ 未检测到图片 URL';
-    // 诊断面板：直接把解析结果显示在页面上
-    const pv = document.getElementById('urlPreview');
-    const pvList = document.getElementById('urlPreviewList');
-    if (excelUrls.length) {
-      pv.style.display = '';
-      pvList.innerHTML = excelUrls.slice(0, 10).map((u, i) =>
-        `${i + 1}. ${u.shopName ? '[' + escapeHtml(u.shopName) + '] ' : ''}${escapeHtml(u.url)}`
-      ).join('<br>') + (excelUrls.length > 10 ? `<br>… 共 ${excelUrls.length} 条` : '');
-    } else {
-      pv.style.display = 'none';
-    }
-    if (excelUrls.length) {
-      console.log('解析到的链接：', excelUrls);
-      toast(`解析到 ${excelUrls.length} 个链接，首条：${excelUrls[0].url.slice(0, 60)}…`, 'info');
-    } else {
-      toast('未检测到链接，请确认表格中有 http/https 开头的图片链接', 'error');
-    }
-    updateBtn();
+    refreshUrlStatus('excel');
   } catch (err) {
     toast('Excel 解析失败：' + err.message, 'error');
     excelCount.textContent = '❌ 解析失败';
   }
+});
+
+// 统一刷新 URL 状态 + 诊断面板
+function refreshUrlStatus(source) {
+  excelCount.textContent = excelUrls.length
+    ? `✅ ${excelUrls.length} 个图片 URL${excelUrls.some(u => u.shopName) ? '（已识别店铺名）' : ''}`
+    : '⚠️ 未检测到图片 URL';
+  const pv = document.getElementById('urlPreview');
+  const pvList = document.getElementById('urlPreviewList');
+  if (excelUrls.length) {
+    pv.style.display = '';
+    pvList.innerHTML = excelUrls.slice(0, 10).map((u, i) =>
+      `${i + 1}. ${u.shopName ? '[' + escapeHtml(u.shopName) + '] ' : ''}${escapeHtml(u.url)}`
+    ).join('<br>') + (excelUrls.length > 10 ? `<br>… 共 ${excelUrls.length} 条` : '');
+    console.log('解析到的链接：', excelUrls);
+    if (source) toast(`解析到 ${excelUrls.length} 个链接，首条：${excelUrls[0].url.slice(0, 60)}`, 'info');
+  } else {
+    pv.style.display = 'none';
+    if (source) toast('未检测到链接，请用下面的「直接粘贴链接」兜底', 'error');
+  }
+  updateBtn();
+}
+
+// 兜底：直接粘贴链接（每行一个）
+document.getElementById('applyUrlsBtn').addEventListener('click', function() {
+  const raw = document.getElementById('urlTextarea').value || '';
+  const lines = raw.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+  const parsed = [];
+  lines.forEach((line, i) => {
+    const u = extractUrl(line);
+    if (!u) return;
+    let shopName = '';
+    const idx = line.indexOf(u.replace(/^https?:/, '').replace(/^\/\//, ''));
+    const before = (idx > 0 ? line.slice(0, idx) : line.slice(0, line.indexOf(u)))
+      .replace(/[,，\t|;；]+$/, '').trim();
+    if (before && !extractUrl(before)) shopName = before;
+    parsed.push({ url: u, row: i + 1, col: 1, shopName });
+  });
+  excelUrls = parsed;
+  excelCard.classList.add('active');
+  refreshUrlStatus('paste');
+  if (!parsed.length) toast('粘贴内容里没找到链接', 'error');
 });
 
 // 转义 HTML，防止表格内容注入
@@ -479,12 +515,21 @@ function escapeHtml(s) {
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
-// 从任意文本中提取 http(s) 链接（不要求以链接开头）
+// 从任意文本中提取链接（支持多种写法）
 function extractUrl(text) {
   if (text === null || text === undefined) return '';
-  const s = String(text);
-  const m = s.match(/https?:\/\/[^\s"'<>，。；、：（）【】《》,;]+/i);
-  return m ? m[0] : '';
+  const s = String(text).trim();
+  const STOP = /[^\s"'<>，。；、：（）【】《》,;]+/;
+  // ① 标准 http(s) 链接
+  let m = s.match(new RegExp('https?://' + STOP.source, 'i'));
+  if (m) return m[0];
+  // ② 协议相对：//host/path
+  m = s.match(/\/\/[a-z0-9.-]+\.[a-z]{2,}[^\s"'<>，。；、：（）【】《》,;]*/i);
+  if (m) return 'https:' + m[0];
+  // ③ 裸域名：host.com/path（无协议前缀）
+  m = s.match(/[a-z0-9.-]+\.(?:com|cn|net|org|io|cc|me|tv|info|xyz|top|shop)\/[^\s"'<>，。；、：（）【】《》,;]*/i);
+  if (m) return 'https://' + m[0];
+  return '';
 }
 
 // 判断链接是否像图片（用于一行多个链接时择优）
