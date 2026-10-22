@@ -432,7 +432,6 @@ input[type="file"] { display: none; }
   <div class="controls">
     <button class="btn btn-primary" id="composeBtn" disabled onclick="startCompose()">🎨 开始合成</button>
     <button class="btn btn-success" id="downloadAllBtn" disabled onclick="downloadAll()">📦 批量打包下载</button>
-    <button class="btn btn-secondary" id="resetSlotBtn" style="padding:10px 18px;font-size:13px" onclick="resetSlotDefaults()">↺ 恢复默认参数</button>
     <button class="btn btn-secondary" id="exportLabelBtn" style="padding:10px 18px;font-size:13px" onclick="exportLabels()">⬇ 导出标签图</button>
   </div>
 
@@ -451,7 +450,7 @@ input[type="file"] { display: none; }
   </div>
 
   <div style="text-align:center;color:#475569;font-size:12px;padding:28px 0 10px;">
-    图片合成工具 · 版本 v13（2026-09-14） · 单文件离线版
+    图片合成工具 · 版本 v14（2026-09-14） · 单文件离线版
   </div>
 </div>
 
@@ -1124,51 +1123,9 @@ function toast(msg, type = 'info') {
 }
 
 // --- 参数固定：以内置默认值为唯一基准，任何电脑打开都完全一致 ---
-// （v12 起不再读写浏览器缓存，避免换电脑/换浏览器后参数不一致）
-const SLOT_COUNT = 6;
-const SLOT_FIELDS = [
-  'slot-origin', 'slot-posX', 'slot-posY',
-  'slot-radiusTL', 'slot-radiusTR', 'slot-radiusBR', 'slot-radiusBL',
-  'slot-textStr', 'slot-textX', 'slot-textY', 'slot-fontSize',
-  'slot-labelOrigin', 'slot-labelX', 'slot-labelY'
-];
-const SLOT_DEFAULTS = {};   // 页面里写死的出厂默认值（唯一基准）
-
-function readSlotConfig(i) {
-  const cfg = document.getElementById('slotConfig' + i);
-  if (!cfg) return null;
-  const o = {};
-  SLOT_FIELDS.forEach(c => {
-    const el = cfg.querySelector('.' + c);
-    if (el) o[c] = el.value;
-  });
-  return o;
-}
-
-function applySlotConfig(i, o) {
-  const cfg = document.getElementById('slotConfig' + i);
-  if (!cfg || !o) return;
-  SLOT_FIELDS.forEach(c => {
-    const el = cfg.querySelector('.' + c);
-    if (el && o[c] !== undefined && o[c] !== null) el.value = o[c];
-  });
-}
-
-(function initFixedDefaults() {
-  for (let i = 0; i < SLOT_COUNT; i++) {
-    const o = readSlotConfig(i);
-    if (o) SLOT_DEFAULTS[i] = o;
-    // 清掉旧版本残留在本地的参数，防止以后误用
-    try { localStorage.removeItem('slot_cfg_' + i); } catch (e) {}
-  }
-})();
-
-function resetSlotDefaults() {
-  const d = SLOT_DEFAULTS[activeSlot];
-  if (!d) return;
-  applySlotConfig(activeSlot, d);
-  toast('已恢复「' + (activeSlot + 1) + '号资源位」的内置默认参数', 'info');
-}
+// （自 v12 起不读写浏览器缓存；v14 移除「恢复默认参数」按钮）
+// 清理 v11 残留在本地的参数缓存
+for (let i = 0; i < 6; i++) { try { localStorage.removeItem('slot_cfg_' + i); } catch (e) {} }
 
 // --- 依赖库自检：cdnjs 被墙时给出明确提示，避免误以为是表格问题 ---
 function checkLibs() {
