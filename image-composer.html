@@ -128,8 +128,8 @@ input[type="file"] { display: none; }
 .btn-download-single:hover { background: #334155; }
 
 /* Slot tabs */
-.slot-tabs { display: flex; gap: 4px; margin: 10px 0 10px; background: #1e293b; border-radius: 10px; padding: 4px; }
-.slot-tab { flex: 1; padding: 7px 12px; text-align: center; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; color: #94a3b8; transition: all 0.2s; border: none; background: none; }
+.slot-tabs { display: flex; flex-wrap: wrap; gap: 4px; margin: 10px 0 10px; background: #1e293b; border-radius: 10px; padding: 4px; }
+.slot-tab { flex: 1 1 auto; white-space: nowrap; padding: 7px 10px; text-align: center; border-radius: 8px; cursor: pointer; font-size: 12.5px; font-weight: 600; color: #94a3b8; transition: all 0.2s; border: none; background: none; }
 .slot-tab:hover { color: #e2e8f0; }
 .slot-tab.active { background: #38bdf8; color: #0f172a; }
 .slot-config { display: none; }
@@ -192,6 +192,7 @@ input[type="file"] { display: none; }
     <button class="slot-tab" data-slot="2">📱 MI-影剧综01-OTT信息流</button>
     <button class="slot-tab" data-slot="3">🏠 HI-首页推荐</button>
     <button class="slot-tab" data-slot="4">🔖 HI-01-角标</button>
+    <button class="slot-tab" data-slot="5">📱 MI-影剧综01-OTT信息流－2</button>
   </div>
 
   <!-- Slot config: 影视角标 -->
@@ -379,6 +380,43 @@ input[type="file"] { display: none; }
     </div>
   </div>
 
+  <!-- Slot config: MI-影剧综01-OTT信息流－2（复用 OTT信息流 规范，仅 X 不同） -->
+  <div class="slot-config" id="slotConfig5">
+    <div class="pos-input">
+      <label>原点：</label>
+      <select class="slot-origin"><option value="bl">左下角</option><option value="tl" selected>左上角</option></select>
+    </div>
+    <div class="pos-input">
+      <label>商品图位置：</label>X<input type="number" class="slot-posX" value="548" min="0">
+      Y<input type="number" class="slot-posY" value="623" min="0">
+      圆角 左上<input type="number" class="slot-radiusTL" value="12" min="0" max="200" style="width:50px">
+      右上<input type="number" class="slot-radiusTR" value="12" min="0" max="200" style="width:50px">
+      右下<input type="number" class="slot-radiusBR" value="12" min="0" max="200" style="width:50px">
+      左下<input type="number" class="slot-radiusBL" value="12" min="0" max="200" style="width:50px">px
+    </div>
+    <div class="slot-text-fields" style="display:none">
+      <div class="pos-input">
+        <label>文字内容：</label>
+        <input type="text" class="slot-textStr" value="猜你喜欢" style="width:120px;padding:4px 8px;border-radius:4px;border:1px solid #475569;background:#0f172a;color:#e2e8f0;">
+      </div>
+      <div class="pos-input">
+        <label>文字位置：</label>X<input type="number" class="slot-textX" value="63" min="0">
+        Y<input type="number" class="slot-textY" value="378" min="0">
+        字号<input type="number" class="slot-fontSize" value="70" min="1" max="200" style="width:50px">px
+      </div>
+    </div>
+    <div class="slot-label-fields">
+      <div class="pos-input">
+        <label>标签原点：</label>
+        <select class="slot-labelOrigin"><option value="bl">左下角</option><option value="tl" selected>左上角</option></select>
+      </div>
+      <div class="pos-input">
+        <label>标签位置：</label>X<input type="number" class="slot-labelX" value="885" min="0">
+        Y<input type="number" class="slot-labelY" value="627" min="0">
+      </div>
+    </div>
+  </div>
+
   <!-- Ad label upload -->
   <div class="upload-section" id="labelUploadSection" style="margin-bottom:36px;margin-top:24px;">
     <div class="upload-card" id="labelCard" onclick="document.getElementById('labelInput').click()" style="min-width:200px;padding:8px 16px;">
@@ -411,7 +449,7 @@ input[type="file"] { display: none; }
   </div>
 
   <div style="text-align:center;color:#475569;font-size:12px;padding:28px 0 10px;">
-    图片合成工具 · 版本 v9（2026-09-14） · 单文件离线版
+    图片合成工具 · 版本 v10（2026-09-14） · 单文件离线版
   </div>
 </div>
 
@@ -651,8 +689,8 @@ document.getElementById('slotTabs').addEventListener('click', function(e) {
     el.style.display = (activeSlot === 0 || activeSlot === 4) ? '' : 'none';
   });
   document.getElementById('labelUploadSection').style.display = (activeSlot === 0 || activeSlot === 4) ? 'none' : '';
-  // MI-01、MI-影剧综、HI-首页推荐按钮上移20px，影视角标和角标保持24px
-  document.querySelector('.controls').style.marginTop = (activeSlot >= 1 && activeSlot <= 3) ? '-14px' : '24px';
+  // MI-01、MI-影剧综（含 －2）、HI-首页推荐按钮上移，影视角标和角标保持24px
+  document.querySelector('.controls').style.marginTop = ((activeSlot >= 1 && activeSlot <= 3) || activeSlot === 5) ? '-14px' : '24px';
   // 切换资源位时更新标签状态显示
   updateLabelStatus();
 });
@@ -680,7 +718,7 @@ function updateLabelStatus() {
 
 // 从 localStorage 恢复已保存的标签图片
 (async function restoreLabels() {
-  for (let i = 0; i <= 4; i++) {
+  for (let i = 0; i <= 5; i++) {
     const dataUrl = localStorage.getItem('label_slot_' + i);
     if (dataUrl) {
       try {
