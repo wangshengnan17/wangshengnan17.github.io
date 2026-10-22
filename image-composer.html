@@ -433,6 +433,7 @@ input[type="file"] { display: none; }
     <button class="btn btn-primary" id="composeBtn" disabled onclick="startCompose()">🎨 开始合成</button>
     <button class="btn btn-success" id="downloadAllBtn" disabled onclick="downloadAll()">📦 批量打包下载</button>
     <button class="btn btn-secondary" id="resetSlotBtn" style="padding:10px 18px;font-size:13px" onclick="resetSlotDefaults()">↺ 恢复默认参数</button>
+    <button class="btn btn-secondary" id="exportLabelBtn" style="padding:10px 18px;font-size:13px" onclick="exportLabels()">⬇ 导出标签图</button>
   </div>
 
   <!-- Progress -->
@@ -450,7 +451,7 @@ input[type="file"] { display: none; }
   </div>
 
   <div style="text-align:center;color:#475569;font-size:12px;padding:28px 0 10px;">
-    图片合成工具 · 版本 v12（2026-09-14） · 单文件离线版
+    图片合成工具 · 版本 v13（2026-09-14） · 单文件离线版
   </div>
 </div>
 
@@ -728,10 +729,21 @@ const BUILTIN_LABELS = {
   5: null   // MI-影剧综01-OTT信息流－2
 };
 
+// 复用关系：5 号位直接复用 1 号位（MI-01-剧集详情页）的标签图
+const LABEL_REUSE = { 5: 1 };
+
+// 取某个资源位的内置标签（含复用）
+function builtinLabelFor(i) {
+  if (BUILTIN_LABELS[i]) return BUILTIN_LABELS[i];
+  const src = LABEL_REUSE[i];
+  if (src !== undefined && BUILTIN_LABELS[src]) return BUILTIN_LABELS[src];
+  return null;
+}
+
 // 从内置数据（优先）或 localStorage 恢复标签图片
 (async function restoreLabels() {
   for (let i = 0; i < 6; i++) {
-    const dataUrl = BUILTIN_LABELS[i] || localStorage.getItem('label_slot_' + i);
+    const dataUrl = builtinLabelFor(i) || localStorage.getItem('label_slot_' + i);
     if (dataUrl) {
       try {
         const img = await loadImageFromUrl(dataUrl);
@@ -744,6 +756,29 @@ const BUILTIN_LABELS = {
   updateLabelStatus();
 })();
 
+// 导出当前已加载的标签图（打包成 zip），用于把标签固化进内置数据
+async function exportLabels() {
+  const zip = new JSZip();
+  let n = 0;
+  for (let i = 0; i < 6; i++) {
+    const img = labelImgs[i];
+    if (!img || !img.naturalWidth) continue;
+    const c = document.createElement('canvas');
+    c.width = img.naturalWidth;
+    c.height = img.naturalHeight;
+    c.getContext('2d').drawImage(img, 0, 0);
+    zip.file('标签-资源位' + (i + 1) + '.png', c.toDataURL('image/png').split(',')[1], { base64: true });
+    n++;
+  }
+  if (!n) {
+    toast('当前没有已加载的标签图', 'error');
+    return;
+  }
+  const blob = await zip.generateAsync({ type: 'blob' });
+  saveAs(blob, '广告标签图.zip');
+  toast('已导出 ' + n + ' 张标签图：广告标签图.zip', 'info');
+}
+
 // Upload label image
 document.getElementById('labelInput').addEventListener('change', async function(e) {
   const file = e.target.files[0];
@@ -754,7 +789,7 @@ document.getElementById('labelInput').addEventListener('change', async function(
     reader.onload = async function(ev) {
       const dataUrl = ev.target.result;
       // 有内置标签时，上传只作临时替换（刷新即复原），保证各电脑一致
-      const isBuiltin = !!BUILTIN_LABELS[activeSlot];
+      const isBuiltin = !!builtinLabelFor(activeSlot);
       if (!isBuiltin) {
         try { localStorage.setItem('label_slot_' + activeSlot, dataUrl); } catch (err) {}
       }
