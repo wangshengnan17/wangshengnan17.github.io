@@ -432,6 +432,7 @@ input[type="file"] { display: none; }
   <div class="controls">
     <button class="btn btn-primary" id="composeBtn" disabled onclick="startCompose()">🎨 开始合成</button>
     <button class="btn btn-success" id="downloadAllBtn" disabled onclick="downloadAll()">📦 批量打包下载</button>
+    <button class="btn btn-secondary" id="resetSlotBtn" style="padding:10px 18px;font-size:13px" onclick="resetSlotDefaults()">↺ 恢复默认参数</button>
   </div>
 
   <!-- Progress -->
@@ -449,7 +450,7 @@ input[type="file"] { display: none; }
   </div>
 
   <div style="text-align:center;color:#475569;font-size:12px;padding:28px 0 10px;">
-    图片合成工具 · 版本 v10（2026-09-14） · 单文件离线版
+    图片合成工具 · 版本 v11（2026-09-14） · 单文件离线版
   </div>
 </div>
 
@@ -1072,6 +1073,85 @@ function toast(msg, type = 'info') {
   document.body.appendChild(el);
   setTimeout(() => el.remove(), 3000);
 }
+
+// --- 记住上次参数：每个资源位独立保存，刷新后自动恢复 ---
+const SLOT_COUNT = 6;
+const SLOT_FIELDS = [
+  'slot-origin', 'slot-posX', 'slot-posY',
+  'slot-radiusTL', 'slot-radiusTR', 'slot-radiusBR', 'slot-radiusBL',
+  'slot-textStr', 'slot-textX', 'slot-textY', 'slot-fontSize',
+  'slot-labelOrigin', 'slot-labelX', 'slot-labelY'
+];
+const cfgKey = i => 'slot_cfg_' + i;
+const SLOT_DEFAULTS = {};   // 出厂默认值，用于「恢复默认参数」
+
+function readSlotConfig(i) {
+  const cfg = document.getElementById('slotConfig' + i);
+  if (!cfg) return null;
+  const o = {};
+  SLOT_FIELDS.forEach(c => {
+    const el = cfg.querySelector('.' + c);
+    if (el) o[c] = el.value;
+  });
+  return o;
+}
+
+function applySlotConfig(i, o) {
+  const cfg = document.getElementById('slotConfig' + i);
+  if (!cfg || !o) return;
+  SLOT_FIELDS.forEach(c => {
+    const el = cfg.querySelector('.' + c);
+    if (el && o[c] !== undefined && o[c] !== null) el.value = o[c];
+  });
+}
+
+function saveSlotConfig(i) {
+  const o = readSlotConfig(i);
+  if (!o) return;
+  try { localStorage.setItem(cfgKey(i), JSON.stringify(o)); } catch (e) {
+    console.warn('参数保存失败（可能是存储空间不足）', e);
+  }
+}
+
+function restoreSlotConfigs() {
+  let restored = 0;
+  for (let i = 0; i < SLOT_COUNT; i++) {
+    try {
+      const raw = localStorage.getItem(cfgKey(i));
+      if (!raw) continue;
+      applySlotConfig(i, JSON.parse(raw));
+      restored++;
+    } catch (e) { /* 数据损坏就忽略，用默认值 */ }
+  }
+  return restored;
+}
+
+function resetSlotDefaults() {
+  const d = SLOT_DEFAULTS[activeSlot];
+  if (!d) return;
+  applySlotConfig(activeSlot, d);
+  try { localStorage.removeItem(cfgKey(activeSlot)); } catch (e) {}
+  toast('已恢复「' + (activeSlot + 1) + '号资源位」的默认参数', 'info');
+}
+
+(function initSlotPersistence() {
+  // 1. 先抓出厂默认值（必须在恢复之前）
+  for (let i = 0; i < SLOT_COUNT; i++) {
+    const o = readSlotConfig(i);
+    if (o) SLOT_DEFAULTS[i] = o;
+  }
+  // 2. 用上次保存的值覆盖
+  const n = restoreSlotConfigs();
+  // 3. 之后任何修改都自动保存
+  for (let i = 0; i < SLOT_COUNT; i++) {
+    const cfg = document.getElementById('slotConfig' + i);
+    if (!cfg) continue;
+    const save = () => saveSlotConfig(i);
+    cfg.addEventListener('input', save);
+    cfg.addEventListener('change', save);
+  }
+  if (n) console.log('已恢复 ' + n + ' 个资源位的历史参数');
+})();
 
 // --- 依赖库自检：cdnjs 被墙时给出明确提示，避免误以为是表格问题 ---
 function checkLibs() {
