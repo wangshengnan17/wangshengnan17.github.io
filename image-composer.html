@@ -450,7 +450,7 @@ input[type="file"] { display: none; }
   </div>
 
   <div style="text-align:center;color:#475569;font-size:12px;padding:28px 0 10px;">
-    图片合成工具 · 版本 v11（2026-09-14） · 单文件离线版
+    图片合成工具 · 版本 v12（2026-09-14） · 单文件离线版
   </div>
 </div>
 
@@ -717,10 +717,21 @@ function updateLabelStatus() {
   }
 }
 
-// 从 localStorage 恢复已保存的标签图片
+// ===== 内置默认「广告」标签图（随文件分发，任何电脑打开都一样）=====
+// key = 资源位序号，value = data:image/png;base64,... ；null 表示该位未内置
+const BUILTIN_LABELS = {
+  0: null,  // 影视角标（无标签）
+  1: null,  // MI-01-剧集详情页
+  2: null,  // MI-影剧综01-OTT信息流
+  3: null,  // HI-首页推荐
+  4: null,  // HI-01-角标（无标签）
+  5: null   // MI-影剧综01-OTT信息流－2
+};
+
+// 从内置数据（优先）或 localStorage 恢复标签图片
 (async function restoreLabels() {
-  for (let i = 0; i <= 5; i++) {
-    const dataUrl = localStorage.getItem('label_slot_' + i);
+  for (let i = 0; i < 6; i++) {
+    const dataUrl = BUILTIN_LABELS[i] || localStorage.getItem('label_slot_' + i);
     if (dataUrl) {
       try {
         const img = await loadImageFromUrl(dataUrl);
@@ -733,21 +744,24 @@ function updateLabelStatus() {
   updateLabelStatus();
 })();
 
-// Upload label image - 上传后自动保存到 localStorage，刷新后不丢失
+// Upload label image
 document.getElementById('labelInput').addEventListener('change', async function(e) {
   const file = e.target.files[0];
   if (!file) return;
   labelStatus.textContent = '正在加载...';
   try {
-    // 读取为 data URL 并存入 localStorage
     const reader = new FileReader();
     reader.onload = async function(ev) {
       const dataUrl = ev.target.result;
-      localStorage.setItem('label_slot_' + activeSlot, dataUrl);
-      // 加载为 Image 对象
+      // 有内置标签时，上传只作临时替换（刷新即复原），保证各电脑一致
+      const isBuiltin = !!BUILTIN_LABELS[activeSlot];
+      if (!isBuiltin) {
+        try { localStorage.setItem('label_slot_' + activeSlot, dataUrl); } catch (err) {}
+      }
       const img = await loadImageFromUrl(dataUrl);
       labelImgs[activeSlot] = img;
-      labelStatus.textContent = '✅ 已加载（' + img.naturalWidth + '×' + img.naturalHeight + '）';
+      labelStatus.textContent = '✅ 已加载（' + img.naturalWidth + '×' + img.naturalHeight + '）'
+        + (isBuiltin ? ' · 临时替换' : '');
       document.getElementById('labelCard').classList.add('active');
     };
     reader.readAsDataURL(file);
@@ -1074,7 +1088,8 @@ function toast(msg, type = 'info') {
   setTimeout(() => el.remove(), 3000);
 }
 
-// --- 记住上次参数：每个资源位独立保存，刷新后自动恢复 ---
+// --- 参数固定：以内置默认值为唯一基准，任何电脑打开都完全一致 ---
+// （v12 起不再读写浏览器缓存，避免换电脑/换浏览器后参数不一致）
 const SLOT_COUNT = 6;
 const SLOT_FIELDS = [
   'slot-origin', 'slot-posX', 'slot-posY',
@@ -1082,8 +1097,7 @@ const SLOT_FIELDS = [
   'slot-textStr', 'slot-textX', 'slot-textY', 'slot-fontSize',
   'slot-labelOrigin', 'slot-labelX', 'slot-labelY'
 ];
-const cfgKey = i => 'slot_cfg_' + i;
-const SLOT_DEFAULTS = {};   // 出厂默认值，用于「恢复默认参数」
+const SLOT_DEFAULTS = {};   // 页面里写死的出厂默认值（唯一基准）
 
 function readSlotConfig(i) {
   const cfg = document.getElementById('slotConfig' + i);
@@ -1105,53 +1119,21 @@ function applySlotConfig(i, o) {
   });
 }
 
-function saveSlotConfig(i) {
-  const o = readSlotConfig(i);
-  if (!o) return;
-  try { localStorage.setItem(cfgKey(i), JSON.stringify(o)); } catch (e) {
-    console.warn('参数保存失败（可能是存储空间不足）', e);
-  }
-}
-
-function restoreSlotConfigs() {
-  let restored = 0;
+(function initFixedDefaults() {
   for (let i = 0; i < SLOT_COUNT; i++) {
-    try {
-      const raw = localStorage.getItem(cfgKey(i));
-      if (!raw) continue;
-      applySlotConfig(i, JSON.parse(raw));
-      restored++;
-    } catch (e) { /* 数据损坏就忽略，用默认值 */ }
+    const o = readSlotConfig(i);
+    if (o) SLOT_DEFAULTS[i] = o;
+    // 清掉旧版本残留在本地的参数，防止以后误用
+    try { localStorage.removeItem('slot_cfg_' + i); } catch (e) {}
   }
-  return restored;
-}
+})();
 
 function resetSlotDefaults() {
   const d = SLOT_DEFAULTS[activeSlot];
   if (!d) return;
   applySlotConfig(activeSlot, d);
-  try { localStorage.removeItem(cfgKey(activeSlot)); } catch (e) {}
-  toast('已恢复「' + (activeSlot + 1) + '号资源位」的默认参数', 'info');
+  toast('已恢复「' + (activeSlot + 1) + '号资源位」的内置默认参数', 'info');
 }
-
-(function initSlotPersistence() {
-  // 1. 先抓出厂默认值（必须在恢复之前）
-  for (let i = 0; i < SLOT_COUNT; i++) {
-    const o = readSlotConfig(i);
-    if (o) SLOT_DEFAULTS[i] = o;
-  }
-  // 2. 用上次保存的值覆盖
-  const n = restoreSlotConfigs();
-  // 3. 之后任何修改都自动保存
-  for (let i = 0; i < SLOT_COUNT; i++) {
-    const cfg = document.getElementById('slotConfig' + i);
-    if (!cfg) continue;
-    const save = () => saveSlotConfig(i);
-    cfg.addEventListener('input', save);
-    cfg.addEventListener('change', save);
-  }
-  if (n) console.log('已恢复 ' + n + ' 个资源位的历史参数');
-})();
 
 // --- 依赖库自检：cdnjs 被墙时给出明确提示，避免误以为是表格问题 ---
 function checkLibs() {
