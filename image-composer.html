@@ -517,7 +517,7 @@ input[type="file"] { display: none; }
   </div>
 
   <div style="text-align:center;color:#475569;font-size:12px;padding:28px 0 10px;">
-    图片合成工具 · 版本 v18（2026-10-22） · 单文件离线版
+    图片合成工具 · 版本 v19（2026-10-22） · 单文件离线版
   </div>
 </div>
 
@@ -758,8 +758,10 @@ document.getElementById('slotTabs').addEventListener('click', function(e) {
     el.style.display = (activeSlot === 0 || activeSlot === 4) ? '' : 'none';
   });
   document.getElementById('labelUploadSection').style.display = hideLabel ? 'none' : '';
-  // MI-01、MI-影剧综（含 －2）、HI-首页推荐按钮上移，影视角标和角标保持24px
-  document.querySelector('.controls').style.marginTop = ((activeSlot >= 1 && activeSlot <= 3) || activeSlot >= 5) ? '-14px' : '24px';
+  // 有标签上传区的资源位（MI-01、MI-影剧综含－2、HI-首页推荐）按钮上移；
+  // 影视角标、HI-01-角标、TCL右小图无上传区，保持 24px，避免按钮贴住面板
+  const ctlUp = (activeSlot >= 1 && activeSlot <= 3) || activeSlot === 5;
+  document.querySelector('.controls').style.marginTop = ctlUp ? '-14px' : '24px';
   // 切换资源位时更新标签状态显示
   updateLabelStatus();
 });
