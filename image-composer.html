@@ -193,6 +193,7 @@ input[type="file"] { display: none; }
     <button class="slot-tab" data-slot="3">🏠 HI-首页推荐</button>
     <button class="slot-tab" data-slot="4">🔖 HI-01-角标</button>
     <button class="slot-tab" data-slot="5">📱 MI-影剧综01-OTT信息流－2</button>
+    <button class="slot-tab" data-slot="6">📺 TCL右小图</button>
   </div>
 
   <!-- Slot config: 影视角标 -->
@@ -208,6 +209,10 @@ input[type="file"] { display: none; }
       右上<input type="number" class="slot-radiusTR" value="0" min="0" max="200" style="width:50px">
       右下<input type="number" class="slot-radiusBR" value="0" min="0" max="200" style="width:50px">
       左下<input type="number" class="slot-radiusBL" value="0" min="0" max="200" style="width:50px">px
+    </div>
+    <div class="pos-input">
+      <label>输出尺寸：</label>宽<input type="number" class="slot-targetW" value="" min="1" placeholder="原图" style="width:60px">
+      高<input type="number" class="slot-targetH" value="" min="1" placeholder="原图" style="width:60px">px
     </div>
     <div class="slot-text-fields">
       <div class="pos-input">
@@ -246,6 +251,10 @@ input[type="file"] { display: none; }
       右下<input type="number" class="slot-radiusBR" value="0" min="0" max="200" style="width:50px">
       左下<input type="number" class="slot-radiusBL" value="0" min="0" max="200" style="width:50px">px
     </div>
+    <div class="pos-input">
+      <label>输出尺寸：</label>宽<input type="number" class="slot-targetW" value="" min="1" placeholder="原图" style="width:60px">
+      高<input type="number" class="slot-targetH" value="" min="1" placeholder="原图" style="width:60px">px
+    </div>
     <div class="slot-text-fields" style="display:none">
       <div class="pos-input">
         <label>文字内容：</label>
@@ -282,6 +291,10 @@ input[type="file"] { display: none; }
       右上<input type="number" class="slot-radiusTR" value="12" min="0" max="200" style="width:50px">
       右下<input type="number" class="slot-radiusBR" value="12" min="0" max="200" style="width:50px">
       左下<input type="number" class="slot-radiusBL" value="12" min="0" max="200" style="width:50px">px
+    </div>
+    <div class="pos-input">
+      <label>输出尺寸：</label>宽<input type="number" class="slot-targetW" value="" min="1" placeholder="原图" style="width:60px">
+      高<input type="number" class="slot-targetH" value="" min="1" placeholder="原图" style="width:60px">px
     </div>
     <div class="slot-text-fields" style="display:none">
       <div class="pos-input">
@@ -320,6 +333,10 @@ input[type="file"] { display: none; }
       右下<input type="number" class="slot-radiusBR" value="6" min="0" max="200" style="width:50px">
       左下<input type="number" class="slot-radiusBL" value="6" min="0" max="200" style="width:50px">px
     </div>
+    <div class="pos-input">
+      <label>输出尺寸：</label>宽<input type="number" class="slot-targetW" value="" min="1" placeholder="原图" style="width:60px">
+      高<input type="number" class="slot-targetH" value="" min="1" placeholder="原图" style="width:60px">px
+    </div>
     <div class="slot-text-fields" style="display:none">
       <div class="pos-input">
         <label>文字内容：</label>
@@ -356,6 +373,10 @@ input[type="file"] { display: none; }
       右上<input type="number" class="slot-radiusTR" value="0" min="0" max="200" style="width:50px">
       右下<input type="number" class="slot-radiusBR" value="0" min="0" max="200" style="width:50px">
       左下<input type="number" class="slot-radiusBL" value="0" min="0" max="200" style="width:50px">px
+    </div>
+    <div class="pos-input">
+      <label>输出尺寸：</label>宽<input type="number" class="slot-targetW" value="" min="1" placeholder="原图" style="width:60px">
+      高<input type="number" class="slot-targetH" value="" min="1" placeholder="原图" style="width:60px">px
     </div>
     <div class="slot-text-fields">
       <div class="pos-input">
@@ -394,6 +415,10 @@ input[type="file"] { display: none; }
       右下<input type="number" class="slot-radiusBR" value="12" min="0" max="200" style="width:50px">
       左下<input type="number" class="slot-radiusBL" value="12" min="0" max="200" style="width:50px">px
     </div>
+    <div class="pos-input">
+      <label>输出尺寸：</label>宽<input type="number" class="slot-targetW" value="" min="1" placeholder="原图" style="width:60px">
+      高<input type="number" class="slot-targetH" value="" min="1" placeholder="原图" style="width:60px">px
+    </div>
     <div class="slot-text-fields" style="display:none">
       <div class="pos-input">
         <label>文字内容：</label>
@@ -416,6 +441,48 @@ input[type="file"] { display: none; }
       </div>
     </div>
   </div>
+
+  <!-- Slot config: TCL右小图 -->
+  <div class="slot-config" id="slotConfig6">
+    <div class="pos-input">
+      <label>原点：</label>
+      <select class="slot-origin"><option value="bl">左下角</option><option value="tl" selected>左上角</option></select>
+    </div>
+    <div class="pos-input">
+      <label>商品图位置：</label>X<input type="number" class="slot-posX" value="550" min="0">
+      Y<input type="number" class="slot-posY" value="574" min="0">
+      圆角 左上<input type="number" class="slot-radiusTL" value="16" min="0" max="200" style="width:50px">
+      右上<input type="number" class="slot-radiusTR" value="16" min="0" max="200" style="width:50px">
+      右下<input type="number" class="slot-radiusBR" value="16" min="0" max="200" style="width:50px">
+      左下<input type="number" class="slot-radiusBL" value="16" min="0" max="200" style="width:50px">px
+    </div>
+    <div class="pos-input">
+      <label>输出尺寸：</label>宽<input type="number" class="slot-targetW" value="390" min="1" style="width:60px">
+      高<input type="number" class="slot-targetH" value="175" min="1" style="width:60px">px
+    </div>
+    <div class="slot-text-fields" style="display:none">
+      <div class="pos-input">
+        <label>文字内容：</label>
+        <input type="text" class="slot-textStr" value="" style="width:120px;padding:4px 8px;border-radius:4px;border:1px solid #475569;background:#0f172a;color:#e2e8f0;">
+      </div>
+      <div class="pos-input">
+        <label>文字位置：</label>X<input type="number" class="slot-textX" value="0" min="0">
+        Y<input type="number" class="slot-textY" value="0" min="0">
+        字号<input type="number" class="slot-fontSize" value="30" min="1" max="200" style="width:50px">px
+      </div>
+    </div>
+    <div class="slot-label-fields">
+      <div class="pos-input">
+        <label>标签原点：</label>
+        <select class="slot-labelOrigin"><option value="bl">左下角</option><option value="tl" selected>左上角</option></select>
+      </div>
+      <div class="pos-input">
+        <label>标签位置：</label>X<input type="number" class="slot-labelX" value="0" min="0">
+        Y<input type="number" class="slot-labelY" value="0" min="0">
+      </div>
+    </div>
+  </div>
+
 
   <!-- Ad label upload -->
   <div class="upload-section" id="labelUploadSection" style="margin-bottom:36px;margin-top:24px;">
@@ -450,7 +517,7 @@ input[type="file"] { display: none; }
   </div>
 
   <div style="text-align:center;color:#475569;font-size:12px;padding:28px 0 10px;">
-    图片合成工具 · 版本 v16（2026-09-14） · 单文件离线版
+    图片合成工具 · 版本 v17（2026-10-22） · 单文件离线版
   </div>
 </div>
 
@@ -691,7 +758,7 @@ document.getElementById('slotTabs').addEventListener('click', function(e) {
   });
   document.getElementById('labelUploadSection').style.display = (activeSlot === 0 || activeSlot === 4) ? 'none' : '';
   // MI-01、MI-影剧综（含 －2）、HI-首页推荐按钮上移，影视角标和角标保持24px
-  document.querySelector('.controls').style.marginTop = ((activeSlot >= 1 && activeSlot <= 3) || activeSlot === 5) ? '-14px' : '24px';
+  document.querySelector('.controls').style.marginTop = ((activeSlot >= 1 && activeSlot <= 3) || activeSlot >= 5) ? '-14px' : '24px';
   // 切换资源位时更新标签状态显示
   updateLabelStatus();
 });
@@ -741,7 +808,7 @@ function builtinLabelFor(i) {
 
 // 从内置数据（优先）或 localStorage 恢复标签图片
 (async function restoreLabels() {
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 7; i++) {
     const dataUrl = builtinLabelFor(i) || localStorage.getItem('label_slot_' + i);
     if (dataUrl) {
       try {
@@ -759,7 +826,7 @@ function builtinLabelFor(i) {
 async function exportLabels() {
   const zip = new JSZip();
   let n = 0;
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 7; i++) {
     const img = labelImgs[i];
     if (!img || !img.naturalWidth) continue;
     const c = document.createElement('canvas');
@@ -937,6 +1004,12 @@ async function startCompose() {
   const fontSize = parseInt(cfg.querySelector('.slot-fontSize').value) || 30;
   const labelX = parseInt(cfg.querySelector('.slot-labelX').value) || 0;
   const labelY = parseInt(cfg.querySelector('.slot-labelY').value) || 0;
+  // 输出尺寸：商品图先缩放成该尺寸再合成；留空=按原图尺寸
+  const targetWEl = cfg.querySelector('.slot-targetW');
+  const targetHEl = cfg.querySelector('.slot-targetH');
+  let targetW = targetWEl ? (parseInt(targetWEl.value) || 0) : 0;
+  let targetH = targetHEl ? (parseInt(targetHEl.value) || 0) : 0;
+  if (!(targetW > 0 && targetH > 0)) { targetW = 0; targetH = 0; }
   // 一一对应：第N张底图 + 第N个URL → 第N张合成图
   const total = Math.min(baseImages.length, excelUrls.length);
   if (baseImages.length !== excelUrls.length) {
@@ -955,7 +1028,7 @@ async function startCompose() {
     const urlItem = excelUrls[i];
     try {
       const overlayImg = await loadImageFromUrl(urlItem.url);
-      const composite = compositeImage(base.img, overlayImg, posX, posY, origin, textX, textY, showText ? textStr : '', radii, labelImgs[activeSlot], labelX, labelY, labelOrigin, fontSize);
+      const composite = compositeImage(base.img, overlayImg, posX, posY, origin, textX, textY, showText ? textStr : '', radii, labelImgs[activeSlot], labelX, labelY, labelOrigin, fontSize, targetW, targetH);
       const blob = dataURLtoBlob(composite);
       // 用店铺名命名，没有则用底图+URL序号
       const shopName = urlItem.shopName || '';
@@ -1015,7 +1088,7 @@ function toCanvasY(canvasH, y, h, origin) {
   return origin === 'tl' ? y : canvasH - y - h;
 }
 
-function compositeImage(baseImg, overlayImg, x, y, origin, textX, textY, textStr, radii, labelImg, labelX, labelY, labelOrigin, fontSize) {
+function compositeImage(baseImg, overlayImg, x, y, origin, textX, textY, textStr, radii, labelImg, labelX, labelY, labelOrigin, fontSize, outW, outH) {
   const canvas = document.createElement('canvas');
   canvas.width = baseImg.naturalWidth;
   canvas.height = baseImg.naturalHeight;
@@ -1025,8 +1098,12 @@ function compositeImage(baseImg, overlayImg, x, y, origin, textX, textY, textStr
   // Draw base
   ctx.drawImage(baseImg, 0, 0);
 
-  // Overlay position
-  const canvasY = toCanvasY(ch, y, overlayImg.naturalHeight, origin);
+  // 输出尺寸：指定了就先把商品图缩放成该尺寸（等比拉伸），否则用原图尺寸
+  const ow = (outW > 0 && outH > 0) ? outW : overlayImg.naturalWidth;
+  const oh = (outW > 0 && outH > 0) ? outH : overlayImg.naturalHeight;
+
+  // Overlay position（Y 用缩放后的高度计算）
+  const canvasY = toCanvasY(ch, y, oh, origin);
 
   // Draw overlay with optional rounded corners
   const hasRadius = radii.some(r => r > 0);
@@ -1034,7 +1111,7 @@ function compositeImage(baseImg, overlayImg, x, y, origin, textX, textY, textStr
     ctx.save();
     ctx.beginPath();
     const [tl, tr, br, bl] = radii;
-    const w = overlayImg.naturalWidth, h = overlayImg.naturalHeight;
+    const w = ow, h = oh;
     ctx.moveTo(x + tl, canvasY);
     ctx.lineTo(x + w - tr, canvasY);
     ctx.quadraticCurveTo(x + w, canvasY, x + w, canvasY + tr);
@@ -1047,7 +1124,7 @@ function compositeImage(baseImg, overlayImg, x, y, origin, textX, textY, textStr
     ctx.closePath();
     ctx.clip();
   }
-  ctx.drawImage(overlayImg, x, canvasY, overlayImg.naturalWidth, overlayImg.naturalHeight);
+  ctx.drawImage(overlayImg, x, canvasY, ow, oh);
   if (hasRadius) ctx.restore();
 
   // Draw "广告" label (independent origin)
@@ -1125,7 +1202,7 @@ function toast(msg, type = 'info') {
 // --- 参数固定：以内置默认值为唯一基准，任何电脑打开都完全一致 ---
 // （自 v12 起不读写浏览器缓存；v14 移除「恢复默认参数」按钮）
 // 清理 v11 残留在本地的参数缓存
-for (let i = 0; i < 6; i++) { try { localStorage.removeItem('slot_cfg_' + i); } catch (e) {} }
+for (let i = 0; i < 7; i++) { try { localStorage.removeItem('slot_cfg_' + i); } catch (e) {} }
 
 // --- 依赖库自检：cdnjs 被墙时给出明确提示，避免误以为是表格问题 ---
 function checkLibs() {
