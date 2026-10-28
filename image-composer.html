@@ -471,7 +471,7 @@ input[type="file"] { display: none; }
         字号<input type="number" class="slot-fontSize" value="30" min="1" max="200" style="width:50px">px
       </div>
     </div>
-    <div class="slot-label-fields">
+    <div class="slot-label-fields" style="display:none">
       <div class="pos-input">
         <label>标签原点：</label>
         <select class="slot-labelOrigin"><option value="bl">左下角</option><option value="tl" selected>左上角</option></select>
@@ -517,7 +517,7 @@ input[type="file"] { display: none; }
   </div>
 
   <div style="text-align:center;color:#475569;font-size:12px;padding:28px 0 10px;">
-    图片合成工具 · 版本 v17（2026-10-22） · 单文件离线版
+    图片合成工具 · 版本 v18（2026-10-22） · 单文件离线版
   </div>
 </div>
 
@@ -749,14 +749,15 @@ document.getElementById('slotTabs').addEventListener('click', function(e) {
   document.querySelectorAll('.slot-config').forEach(c => c.classList.remove('active'));
   const config = document.getElementById('slotConfig' + activeSlot);
   config.classList.add('active');
-  // 影视角标（slot 0）和角标（slot 4）隐藏标签配置和标签上传按钮
+  // 影视角标（slot 0）、角标（slot 4）、TCL右小图（slot 6）隐藏标签配置和标签上传按钮
+  const hideLabel = (activeSlot === 0 || activeSlot === 4 || activeSlot === 6);
   config.querySelectorAll('.slot-label-fields').forEach(el => {
-    el.style.display = (activeSlot === 0 || activeSlot === 4) ? 'none' : '';
+    el.style.display = hideLabel ? 'none' : '';
   });
   config.querySelectorAll('.slot-text-fields').forEach(el => {
     el.style.display = (activeSlot === 0 || activeSlot === 4) ? '' : 'none';
   });
-  document.getElementById('labelUploadSection').style.display = (activeSlot === 0 || activeSlot === 4) ? 'none' : '';
+  document.getElementById('labelUploadSection').style.display = hideLabel ? 'none' : '';
   // MI-01、MI-影剧综（含 －2）、HI-首页推荐按钮上移，影视角标和角标保持24px
   document.querySelector('.controls').style.marginTop = ((activeSlot >= 1 && activeSlot <= 3) || activeSlot >= 5) ? '-14px' : '24px';
   // 切换资源位时更新标签状态显示
